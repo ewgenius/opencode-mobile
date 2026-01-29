@@ -2,16 +2,18 @@
   "expo": {
     "name": "opencode-mobile",
     "slug": "opencode-mobile",
-    "version": "1.0.0",
+    "version": "0.1.0-alpha.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "opencodemobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "buildNumber": "1"
     },
     "android": {
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
