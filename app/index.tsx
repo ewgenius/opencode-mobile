@@ -9,7 +9,7 @@ export default function Index() {
   const servers = useServers();
   const activeServerId = useActiveServerId();
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function Index() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ActivityIndicator size="large" color={colors.surfaceBrand} />
-      <Text style={[styles.text, { color: colors.text, ...ui }] as any}>
+      <Text style={[styles.text, { color: colors.text, fontFamily: uiFont }]}>
         {isChecking ? 'Loading...' : 'Redirecting...'}
       </Text>
     </View>

@@ -49,7 +49,7 @@ export default function ConnectServer() {
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
 
   // Validate URL on change
   useEffect(() => {
@@ -214,7 +214,7 @@ export default function ConnectServer() {
           ) : (
             <View style={styles.placeholder} />
           )}
-          <Text style={[styles.title, { color: colors.text, ...ui }] as any}>
+          <Text style={[styles.title, { color: colors.text, fontFamily: uiFont }] as any}>
             {headerContent.title}
           </Text>
           <View style={styles.placeholder} />
@@ -222,7 +222,9 @@ export default function ConnectServer() {
 
         {/* Subtitle for first launch */}
         {headerContent.subtitle && (
-          <Text style={[styles.subtitle, { color: colors.textSecondary, ...ui }] as any}>
+          <Text
+            style={[styles.subtitle, { color: colors.textSecondary, fontFamily: uiFont }] as any}
+          >
             {headerContent.subtitle}
           </Text>
         )}
@@ -291,7 +293,7 @@ export default function ConnectServer() {
                     styles.testResultText,
                     {
                       color: testResult.success ? colors.textOnSuccess : colors.textOnError,
-                      ...ui,
+                      fontFamily: uiFont,
                     },
                   ] as any
                 }
@@ -314,7 +316,7 @@ export default function ConnectServer() {
         </View>
 
         {/* Help Text */}
-        <Text style={[styles.helpText, { color: colors.textTertiary, ...ui }] as any}>
+        <Text style={[styles.helpText, { color: colors.textTertiary, fontFamily: uiFont }] as any}>
           {isFirstLaunch
             ? 'Enter your OpenCode server URL to connect. If your server requires authentication, enter the password. Need help? Contact your server administrator.'
             : 'Enter your OpenCode server URL to connect. If your server requires authentication, enter the password.'}
@@ -332,7 +334,14 @@ export default function ConnectServer() {
             ]}
           >
             <IconSymbol name="info.circle.fill" size={20} color={colors.iconInfo} />
-            <Text style={[styles.instructionsText, { color: colors.textSecondary, ...ui }] as any}>
+            <Text
+              style={
+                [
+                  styles.instructionsText,
+                  { color: colors.textSecondary, fontFamily: uiFont },
+                ] as any
+              }
+            >
               To get started, you&apos;ll need an OpenCode server running. Visit our documentation
               to learn how to set one up.
             </Text>

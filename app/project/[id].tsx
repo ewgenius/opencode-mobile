@@ -20,7 +20,7 @@ import { useProjectStore } from '@/stores/projectStore';
 export default function ProjectDetail() {
   const { id: projectId } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
 
   // Fetch sessions data
   const {
@@ -90,7 +90,7 @@ export default function ProjectDetail() {
       <MainContent>
         <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
           <ActivityIndicator size="large" color={colors.surfaceBrand} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary, ...ui }]}>
+          <Text style={[styles.loadingText, { color: colors.textSecondary, fontFamily: uiFont }]}>
             Loading sessions...
           </Text>
         </View>
@@ -103,10 +103,10 @@ export default function ProjectDetail() {
     return (
       <MainContent>
         <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-          <Text style={[styles.errorTitle, { color: colors.text, ...ui }]}>
+          <Text style={[styles.errorTitle, { color: colors.text, fontFamily: uiFont }]}>
             Failed to load sessions
           </Text>
-          <Text style={[styles.errorMessage, { color: colors.textSecondary, ...ui }]}>
+          <Text style={[styles.errorMessage, { color: colors.textSecondary, fontFamily: uiFont }]}>
             {error?.message || 'An error occurred while fetching sessions'}
           </Text>
           <Button onPress={() => refetch()} variant="secondary">
@@ -135,8 +135,12 @@ export default function ProjectDetail() {
       >
         {/* Project Header */}
         <View style={styles.projectHeader}>
-          <Text style={[styles.projectName, { color: colors.text, ...ui }]}>{projectName}</Text>
-          <Text style={[styles.projectSubtitle, { color: colors.textSecondary, ...ui }]}>
+          <Text style={[styles.projectName, { color: colors.text, fontFamily: uiFont }]}>
+            {projectName}
+          </Text>
+          <Text
+            style={[styles.projectSubtitle, { color: colors.textSecondary, fontFamily: uiFont }]}
+          >
             {totalSessions} session{totalSessions !== 1 ? 's' : ''}
           </Text>
         </View>
@@ -155,10 +159,12 @@ export default function ProjectDetail() {
         <View style={styles.sessionsSection}>
           {workspaceIds.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={[styles.emptyTitle, { color: colors.text, ...ui }]}>
+              <Text style={[styles.emptyTitle, { color: colors.text, fontFamily: uiFont }]}>
                 No sessions yet
               </Text>
-              <Text style={[styles.emptySubtitle, { color: colors.textSecondary, ...ui }]}>
+              <Text
+                style={[styles.emptySubtitle, { color: colors.textSecondary, fontFamily: uiFont }]}
+              >
                 Create your first session to get started
               </Text>
             </View>

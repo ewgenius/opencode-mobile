@@ -48,7 +48,7 @@ export default function ServerSettings() {
   const [error, setError] = useState<string>('');
 
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
 
   // Load server data
   useEffect(() => {
@@ -173,7 +173,7 @@ export default function ServerSettings() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.centerContent}>
           <IconSymbol name="server.rack" size={48} color={colors.icon} />
-          <Text style={[styles.loadingText, { color: colors.text, ...ui }] as any}>
+          <Text style={[styles.loadingText, { color: colors.text, fontFamily: uiFont }] as any}>
             Loading server settings...
           </Text>
         </View>
@@ -187,10 +187,12 @@ export default function ServerSettings() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.centerContent}>
           <IconSymbol name="exclamationmark.triangle.fill" size={48} color={colors.iconError} />
-          <Text style={[styles.errorTitle, { color: colors.text, ...ui }] as any}>
+          <Text style={[styles.errorTitle, { color: colors.text, fontFamily: uiFont }] as any}>
             {error || 'Server not found'}
           </Text>
-          <Text style={[styles.errorText, { color: colors.textSecondary, ...ui }] as any}>
+          <Text
+            style={[styles.errorText, { color: colors.textSecondary, fontFamily: uiFont }] as any}
+          >
             The server you&apos;re looking for doesn&apos;t exist or has been deleted.
           </Text>
           <Button
@@ -217,7 +219,9 @@ export default function ServerSettings() {
           <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
             <IconSymbol name="chevron.left" size={28} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.text, ...ui }] as any}>Server Settings</Text>
+          <Text style={[styles.title, { color: colors.text, fontFamily: uiFont }] as any}>
+            Server Settings
+          </Text>
           <View style={styles.placeholder} />
         </View>
 
@@ -233,19 +237,31 @@ export default function ServerSettings() {
         >
           <View style={styles.serverInfoRow}>
             <IconSymbol name="server.rack" size={20} color={colors.icon} />
-            <Text style={[styles.serverInfoLabel, { color: colors.textSecondary, ...ui }] as any}>
+            <Text
+              style={
+                [styles.serverInfoLabel, { color: colors.textSecondary, fontFamily: uiFont }] as any
+              }
+            >
               Server ID:
             </Text>
-            <Text style={[styles.serverInfoValue, { color: colors.text, ...ui }] as any}>
+            <Text
+              style={[styles.serverInfoValue, { color: colors.text, fontFamily: uiFont }] as any}
+            >
               {server.id}
             </Text>
           </View>
           <View style={styles.serverInfoRow}>
             <IconSymbol name="clock" size={20} color={colors.icon} />
-            <Text style={[styles.serverInfoLabel, { color: colors.textSecondary, ...ui }] as any}>
+            <Text
+              style={
+                [styles.serverInfoLabel, { color: colors.textSecondary, fontFamily: uiFont }] as any
+              }
+            >
               Added:
             </Text>
-            <Text style={[styles.serverInfoValue, { color: colors.text, ...ui }] as any}>
+            <Text
+              style={[styles.serverInfoValue, { color: colors.text, fontFamily: uiFont }] as any}
+            >
               {new Date(server.createdAt).toLocaleDateString()}
             </Text>
           </View>
@@ -296,7 +312,9 @@ export default function ServerSettings() {
 
         {/* Danger Zone */}
         <View style={[styles.dangerZone, { borderTopColor: colors.border }]}>
-          <Text style={[styles.dangerTitle, { color: colors.textOnError, ...ui }] as any}>
+          <Text
+            style={[styles.dangerTitle, { color: colors.textOnError, fontFamily: uiFont }] as any}
+          >
             Danger Zone
           </Text>
 
@@ -313,7 +331,14 @@ export default function ServerSettings() {
           >
             <View style={styles.deleteButtonContent}>
               <IconSymbol name="trash" size={20} color={colors.iconError} />
-              <Text style={[styles.deleteButtonText, { color: colors.textOnError, ...ui }] as any}>
+              <Text
+                style={
+                  [
+                    styles.deleteButtonText,
+                    { color: colors.textOnError, fontFamily: uiFont },
+                  ] as any
+                }
+              >
                 {isDeleting ? 'Deleting...' : 'Delete Server'}
               </Text>
             </View>

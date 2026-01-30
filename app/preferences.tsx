@@ -5,14 +5,8 @@ import { router } from 'expo-router';
 import { MainContent } from '@/components/layout';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
-import {
-  usePreferencesStore,
-  useThemeMode,
-  useColorSchemeId,
-  useUIFont,
-  useCodeFont,
-} from '@/stores/preferencesStore';
-import { SYSTEM_FONTS, MONOSPACE_FONTS, getFontLabel } from '@/fonts/config';
+import { usePreferencesStore, useThemeMode, useColorSchemeId } from '@/stores/preferencesStore';
+import { SYSTEM_FONTS, MONOSPACE_FONTS } from '@/fonts/config';
 import { getAvailableThemes, type ThemeMetadata } from '@/themes';
 import type { ThemeMode } from '@/themes/types';
 import { Select } from '@/components/ui/select';
@@ -25,11 +19,9 @@ const THEME_MODE_OPTIONS: { value: ThemeMode; label: string }[] = [
 
 export default function Preferences() {
   const { colors } = useTheme();
-  const { ui, code } = useFonts();
+  const { uiFont, codeFont } = useFonts();
   const themeMode = useThemeMode();
   const colorSchemeId = useColorSchemeId();
-  const uiFont = useUIFont();
-  const codeFont = useCodeFont();
   const { setThemeMode, setColorScheme, setUIFont, setCodeFont } = usePreferencesStore();
   const [notifications, setNotifications] = React.useState(true);
   const [autoConnect, setAutoConnect] = React.useState(true);
@@ -95,15 +87,13 @@ export default function Preferences() {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <IconSymbol name="chevron.left" size={28} color={textColor} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: textColor, fontFamily: ui.fontFamily }]}>
-            Preferences
-          </Text>
+          <Text style={[styles.title, { color: textColor, fontFamily: uiFont }]}>Preferences</Text>
           <View style={styles.placeholder} />
         </View>
 
         {/* Appearance Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: uiFont }]}>
             Appearance
           </Text>
 
@@ -114,9 +104,7 @@ export default function Preferences() {
             <View style={styles.selectRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="moon" size={22} color={iconColor} />
-                <Text
-                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
-                >
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
                   Theme Mode
                 </Text>
               </View>
@@ -136,9 +124,7 @@ export default function Preferences() {
             <View style={styles.selectRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="paintpalette" size={22} color={iconColor} />
-                <Text
-                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
-                >
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
                   Color Scheme
                 </Text>
               </View>
@@ -157,7 +143,7 @@ export default function Preferences() {
 
         {/* Typography Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: uiFont }]}>
             Typography
           </Text>
 
@@ -168,9 +154,7 @@ export default function Preferences() {
             <View style={styles.selectRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="textformat" size={22} color={iconColor} />
-                <Text
-                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
-                >
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
                   UI Font
                 </Text>
               </View>
@@ -190,9 +174,7 @@ export default function Preferences() {
             <View style={styles.selectRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="doc.text" size={22} color={iconColor} />
-                <Text
-                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
-                >
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
                   Code Font
                 </Text>
               </View>
@@ -210,14 +192,14 @@ export default function Preferences() {
 
             {/* Font Preview */}
             <View style={styles.previewContainer}>
-              <Text style={[styles.previewLabel, { color: iconColor, fontFamily: ui.fontFamily }]}>
+              <Text style={[styles.previewLabel, { color: iconColor, fontFamily: uiFont }]}>
                 Preview
               </Text>
               <View style={[styles.previewBox, { backgroundColor: colors.surface }]}>
-                <Text style={[{ color: textColor }, ui]}>
+                <Text style={[{ color: textColor, fontFamily: uiFont }]}>
                   UI Font: The quick brown fox jumps over the lazy dog
                 </Text>
-                <Text style={[{ color: textColor, marginTop: 8 }, code]}>
+                <Text style={[{ color: textColor, marginTop: 8, fontFamily: codeFont }]}>
                   Code Font: function hello() {'{'} return 42; {'}'}
                 </Text>
               </View>
@@ -227,7 +209,7 @@ export default function Preferences() {
 
         {/* Notifications Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: uiFont }]}>
             Notifications
           </Text>
 
@@ -237,9 +219,7 @@ export default function Preferences() {
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="bell" size={22} color={iconColor} />
-                <Text
-                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
-                >
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
                   Push Notifications
                 </Text>
               </View>
@@ -254,7 +234,7 @@ export default function Preferences() {
 
         {/* Connection Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: uiFont }]}>
             Connection
           </Text>
 
@@ -264,9 +244,7 @@ export default function Preferences() {
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="bolt" size={22} color={iconColor} />
-                <Text
-                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
-                >
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
                   Auto-connect on Launch
                 </Text>
               </View>
@@ -281,9 +259,7 @@ export default function Preferences() {
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
-            About
-          </Text>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: uiFont }]}>About</Text>
 
           <View
             style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.text }]}
@@ -291,9 +267,7 @@ export default function Preferences() {
             <TouchableOpacity style={styles.settingRow} onPress={handleAbout}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="info.circle" size={22} color={iconColor} />
-                <Text
-                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
-                >
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
                   About OpenCode
                 </Text>
               </View>
@@ -305,9 +279,7 @@ export default function Preferences() {
             <TouchableOpacity style={styles.settingRow} onPress={handlePrivacy}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="lock.shield" size={22} color={iconColor} />
-                <Text
-                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
-                >
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
                   Privacy Policy
                 </Text>
               </View>
@@ -317,7 +289,7 @@ export default function Preferences() {
         </View>
 
         {/* Version Info */}
-        <Text style={[styles.version, { color: iconColor, fontFamily: ui.fontFamily }]}>
+        <Text style={[styles.version, { color: iconColor, fontFamily: uiFont }]}>
           Version 1.0.0 (Build 1)
         </Text>
       </ScrollView>

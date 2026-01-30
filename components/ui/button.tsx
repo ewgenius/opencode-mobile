@@ -30,7 +30,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
   const sizeConfig = sizeStyles[size];
 
   const getBackgroundColor = (pressed: boolean): string => {
@@ -105,7 +105,7 @@ export function Button({
   });
 
   const textStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     color: getTextColor(),
     fontSize: sizeConfig.fontSize,
     fontWeight: '600',

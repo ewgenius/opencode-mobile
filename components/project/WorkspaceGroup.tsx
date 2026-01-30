@@ -20,7 +20,7 @@ export function WorkspaceGroup({
 }: WorkspaceGroupProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
 
   const isDefaultWorkspace = workspaceId === 'default';
   const title = isDefaultWorkspace ? 'General' : `Workspace ${workspaceId.slice(0, 8)}`;
@@ -39,9 +39,9 @@ export function WorkspaceGroup({
             size={18}
             color={isDefaultWorkspace ? colors.icon : colors.surfaceBrand}
           />
-          <Text style={[styles.title, { color: colors.text, ...ui }]}>{title}</Text>
+          <Text style={[styles.title, { color: colors.text, fontFamily: uiFont }]}>{title}</Text>
           <View style={[styles.badge, { backgroundColor: colors.backgroundTertiary }]}>
-            <Text style={[styles.badgeText, { color: colors.textSecondary, ...ui }]}>
+            <Text style={[styles.badgeText, { color: colors.textSecondary, fontFamily: uiFont }]}>
               {sessionCount}
             </Text>
           </View>

@@ -2,9 +2,15 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useFonts as useExpoFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
 
 import { AppShell } from '@/components/layout';
 import { ThemeProvider, useTheme } from '@/components/ThemeProvider';
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -37,6 +43,22 @@ function RootLayoutContent() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useExpoFonts({
+    'GeistMono-Regular': require('../assets/fonts/GeistMono-Regular.ttf'),
+    'GeistMono-Italic': require('../assets/fonts/GeistMono-Italic.ttf'),
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  // Return null to keep splash screen visible while fonts load
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
