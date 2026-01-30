@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 0,
     marginBottom: 8,
   },
   headerLeft: {
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: 0,
     minWidth: 24,
     alignItems: 'center',
   },

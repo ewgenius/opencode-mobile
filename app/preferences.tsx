@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   card: {
-    borderRadius: 12,
+    borderRadius: 0,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   },
   previewBox: {
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 0,
   },
   version: {
     fontSize: 14,

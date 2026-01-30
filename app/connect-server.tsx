@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 0,
     borderWidth: 1,
   },
   testResultText: {
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 0,
     borderWidth: 1,
     marginTop: 16,
   },

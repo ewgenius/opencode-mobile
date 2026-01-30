@@ -34,10 +34,8 @@ export function MessageItem({ message }: MessageItemProps) {
   const bubbleStyle: ViewStyle = {
     maxWidth: '85%',
     padding: 12,
-    borderRadius: 18,
+    borderRadius: 0,
     backgroundColor: isUser ? colors.surfaceBrand : colors.surface,
-    borderBottomRightRadius: isUser ? 4 : 18,
-    borderBottomLeftRadius: isUser ? 18 : 4,
     borderWidth: isUser ? 0 : 1,
     borderColor: colors.border,
   };
@@ -72,7 +70,7 @@ export function MessageItem({ message }: MessageItemProps) {
         color: isUser ? colors.textOnBrand : colors.syntaxPrimitive,
         paddingHorizontal: 4,
         paddingVertical: 2,
-        borderRadius: 4,
+        borderRadius: 0,
       } as TextStyle,
       code_block: {
         fontFamily: codeFont,
@@ -80,7 +78,7 @@ export function MessageItem({ message }: MessageItemProps) {
         lineHeight: 20,
         backgroundColor: isUser ? 'rgba(0,0,0,0.15)' : colors.backgroundTertiary,
         padding: 12,
-        borderRadius: 8,
+        borderRadius: 0,
         marginVertical: 8,
       } as ViewStyle,
       fence: {
@@ -89,13 +87,13 @@ export function MessageItem({ message }: MessageItemProps) {
         lineHeight: 20,
         backgroundColor: isUser ? 'rgba(0,0,0,0.15)' : colors.backgroundTertiary,
         padding: 12,
-        borderRadius: 8,
+        borderRadius: 0,
         marginVertical: 8,
       } as ViewStyle,
       pre: {
         backgroundColor: isUser ? 'rgba(0,0,0,0.15)' : colors.backgroundTertiary,
         padding: 12,
-        borderRadius: 8,
+        borderRadius: 0,
         marginVertical: 8,
       } as ViewStyle,
       em: {
