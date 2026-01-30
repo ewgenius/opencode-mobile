@@ -1,0 +1,65 @@
+{
+  "themes": [
+    {
+      "id": "oc-1",
+      "name": "OC-1"
+    },
+    {
+      "id": "dracula",
+      "name": "Dracula"
+    },
+    {
+      "id": "tokyonight",
+      "name": "Tokyonight"
+    },
+    {
+      "id": "monokai",
+      "name": "Monokai"
+    },
+    {
+      "id": "nord",
+      "name": "Nord"
+    },
+    {
+      "id": "catppuccin",
+      "name": "Catppuccin"
+    },
+    {
+      "id": "ayu",
+      "name": "Ayu"
+    },
+    {
+      "id": "onedarkpro",
+      "name": "One Dark Pro"
+    },
+    {
+      "id": "shadesofpurple",
+      "name": "Shades of Purple"
+    },
+    {
+      "id": "nightowl",
+      "name": "Night Owl"
+    },
+    {
+      "id": "vesper",
+      "name": "Vesper"
+    },
+    {
+      "id": "carbonfox",
+      "name": "Carbonfox"
+    },
+    {
+      "id": "gruvbox",
+      "name": "Gruvbox"
+    },
+    {
+      "id": "aura",
+      "name": "Aura"
+    },
+    {
+      "id": "solarized",
+      "name": "Solarized"
+    }
+  ],
+  "defaultTheme": "oc-1"
+}

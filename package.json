@@ -9,7 +9,10 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "echo 'No tests configured' && exit 0"
+    "test": "echo 'No tests configured' && exit 0",
+    "generate-themes": "bun run scripts/generateThemes.js",
+    "prebuild": "bun run generate-themes",
+    "prestart": "bun run generate-themes"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -17,6 +20,8 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "expo": "~54.0.32",
+    "react-native-mmkv": "^4.1.2",
+    "zustand": "^5.0.10",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.11",
     "expo-haptics": "~15.0.8",
@@ -40,6 +45,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "culori": "^4.0.2",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "eslint-config-prettier": "^10.1.8",
