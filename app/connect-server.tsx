@@ -14,7 +14,6 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { Fonts } from '@/constants/theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 
 export default function ConnectServer() {
   const [serverUrl, setServerUrl] = useState('');
@@ -69,8 +68,6 @@ export default function ConnectServer() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor }]}
     >
-      <StatusBar style="auto" />
-
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>

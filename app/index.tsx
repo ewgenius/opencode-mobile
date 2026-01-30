@@ -15,17 +15,22 @@ export default function Index() {
   const tintColor = useThemeColor({}, 'tint');
 
   useEffect(() => {
-    // Check if we have servers configured
-    if (!hasServers) {
-      // No servers - show connect server screen
-      router.replace('/connect-server');
-    } else if (lastProjectId) {
-      // Have servers and last project - redirect to it
-      router.replace(`/project/${lastProjectId}`);
-    } else {
-      // Have servers but no last project - redirect to first project
-      router.replace('/project/1');
-    }
+    // Defer navigation to ensure navigator is mounted
+    const timeout = setTimeout(() => {
+      // Check if we have servers configured
+      if (!hasServers) {
+        // No servers - show connect server screen
+        router.replace('/connect-server');
+      } else if (lastProjectId) {
+        // Have servers and last project - redirect to it
+        router.replace(`/project/${lastProjectId}`);
+      } else {
+        // Have servers but no last project - redirect to first project
+        router.replace('/project/1');
+      }
+    }, 0);
+
+    return () => clearTimeout(timeout);
   }, []);
 
   // Show loading state while redirecting
