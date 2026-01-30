@@ -7,6 +7,7 @@
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import { useApi } from './useApi';
 import { useCacheStore, useActiveServerId, CACHE_TTL } from '@/stores';
+import type { MessageWithParts } from '@/types/messageParts';
 
 // API Types (from SDK)
 interface ApiProject {
@@ -24,16 +25,6 @@ interface ApiSession {
   workspaceId?: string;
   createdAt: number;
   updatedAt: number;
-}
-
-interface ApiMessage {
-  id: string;
-  sessionId: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  agent?: string;
-  model?: string;
-  timestamp: number;
 }
 
 // Query Keys
@@ -108,7 +99,12 @@ export function useSessions(
 export function useMessages(
   sessionId: string | null,
   options?: Omit<
-    UseQueryOptions<ApiMessage[], Error, ApiMessage[], ReturnType<typeof queryKeys.messages>>,
+    UseQueryOptions<
+      MessageWithParts[],
+      Error,
+      MessageWithParts[],
+      ReturnType<typeof queryKeys.messages>
+    >,
     'queryKey' | 'queryFn'
   >
 ) {

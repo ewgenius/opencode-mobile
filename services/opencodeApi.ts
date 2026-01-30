@@ -6,6 +6,7 @@
 
 import { createOpencodeClient } from '@opencode-ai/sdk';
 import type { Server } from '@/stores';
+import type { MessageWithParts, Part } from '@/types/messageParts';
 
 export interface ApiError extends Error {
   status?: number;
@@ -171,17 +172,7 @@ export class OpencodeApi {
   /**
    * Get all messages for a session
    */
-  async getMessages(sessionId: string): Promise<
-    Array<{
-      id: string;
-      sessionId: string;
-      role: 'user' | 'assistant' | 'system';
-      content: string;
-      agent?: string;
-      model?: string;
-      timestamp: number;
-    }>
-  > {
+  async getMessages(sessionId: string): Promise<MessageWithParts[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const clientAny = this.client as any;
     const response = await clientAny.session?.get?.({
@@ -189,25 +180,17 @@ export class OpencodeApi {
     });
 
     const data = response?.data || response;
-    const messages: Array<{
-      id: string;
-      sessionId: string;
-      role: 'user' | 'assistant' | 'system';
-      content: string;
-      agent?: string;
-      model?: string;
-      timestamp: number;
-    }> = [];
+    const messages: MessageWithParts[] = [];
 
     if (data?.messages && Array.isArray(data.messages)) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const msg of data.messages) {
-        const content = this.extractMessageContent(msg);
+        const parts = this.extractMessageParts(msg, sessionId);
         messages.push({
           id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           sessionId,
           role: (msg.role as 'user' | 'assistant' | 'system') || 'assistant',
-          content,
+          parts,
           agent: msg.agent,
           model: msg.modelID,
           timestamp: msg.time?.created || Date.now(),
@@ -303,6 +286,78 @@ export class OpencodeApi {
       );
     }
     return response?.content || response?.text || '';
+  }
+
+  /**
+   * Extract parts from SDK message format
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private extractMessageParts(msg: any, sessionId: string): Part[] {
+    const messageId = msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    if (msg?.parts && Array.isArray(msg.parts)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return msg.parts.map((part: any, index: number) => {
+        const basePart = {
+          id: part.id || `${messageId}-part-${index}`,
+          sessionID: sessionId,
+          messageID: messageId,
+        };
+
+        switch (part?.type) {
+          case 'text':
+            return {
+              ...basePart,
+              type: 'text' as const,
+              text: part.text || '',
+            };
+          case 'reasoning':
+            return {
+              ...basePart,
+              type: 'reasoning' as const,
+              text: part.text || '',
+              time: part.time,
+            };
+          case 'tool':
+            return {
+              ...basePart,
+              type: 'tool' as const,
+              tool: part.tool || part.name || 'unknown',
+              state: part.state || { input: {}, output: {}, status: 'pending' },
+            };
+          case 'patch':
+            return {
+              ...basePart,
+              type: 'patch' as const,
+              files: part.files || [],
+            };
+          case 'agent':
+            return {
+              ...basePart,
+              type: 'agent' as const,
+              name: part.name || 'unknown',
+            };
+          default:
+            // Fallback to text for unknown types
+            return {
+              ...basePart,
+              type: 'text' as const,
+              text: part.text || JSON.stringify(part),
+            };
+        }
+      });
+    }
+
+    // Fallback: if no parts, create a single text part from content
+    return [
+      {
+        id: `${messageId}-part-0`,
+        type: 'text',
+        sessionID: sessionId,
+        messageID: messageId,
+        text: msg?.content || msg?.text || '',
+      },
+    ];
   }
 
   /**
