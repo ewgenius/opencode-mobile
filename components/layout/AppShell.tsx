@@ -22,21 +22,13 @@ export function AppShell({ children, title = 'OpenCode' }: AppShellProps) {
   return (
     <View style={[styles.container, { backgroundColor, paddingBottom: insets.bottom }]}>
       {/* Header - always visible */}
-      <Header 
-        onMenuPress={openDrawer}
-        title={title}
-      />
-      
+      <Header onMenuPress={openDrawer} title={title} />
+
       {/* Main Content */}
-      <View style={styles.content}>
-        {children}
-      </View>
-      
+      <View style={styles.content}>{children}</View>
+
       {/* Drawer - slides in from left */}
-      <Drawer 
-        visible={drawerOpen}
-        onClose={closeDrawer}
-      >
+      <Drawer visible={drawerOpen} onClose={closeDrawer}>
         <Sidebar onItemPress={closeDrawer} />
       </Drawer>
     </View>

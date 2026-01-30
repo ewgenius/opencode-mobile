@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert
+  Alert,
 } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { Fonts } from '@/constants/theme';
@@ -34,7 +34,7 @@ export default function ConnectServer() {
     }
 
     setIsConnecting(true);
-    
+
     // TODO: Implement actual connection test with SDK
     // For now, simulate a delay
     setTimeout(() => {
@@ -55,7 +55,7 @@ export default function ConnectServer() {
 
     // TODO: Save to server store
     console.log('Saving server:', { serverUrl, password, serverName });
-    
+
     // Navigate back or to project
     router.replace('/');
   };
@@ -65,16 +65,13 @@ export default function ConnectServer() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor }]}
     >
       <StatusBar style="auto" />
-      
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
+
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
@@ -93,11 +90,14 @@ export default function ConnectServer() {
               Server URL
             </Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: 'rgba(0,0,0,0.05)', 
-                color: textColor,
-                fontFamily: Fonts.sans 
-              }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  color: textColor,
+                  fontFamily: Fonts.sans,
+                },
+              ]}
               placeholder="https://your-server.com"
               placeholderTextColor={iconColor}
               value={serverUrl}
@@ -113,11 +113,14 @@ export default function ConnectServer() {
               Password (optional)
             </Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: 'rgba(0,0,0,0.05)', 
-                color: textColor,
-                fontFamily: Fonts.sans 
-              }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  color: textColor,
+                  fontFamily: Fonts.sans,
+                },
+              ]}
               placeholder="Enter password if required"
               placeholderTextColor={iconColor}
               value={password}
@@ -131,11 +134,14 @@ export default function ConnectServer() {
               Server Name (optional)
             </Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: 'rgba(0,0,0,0.05)', 
-                color: textColor,
-                fontFamily: Fonts.sans 
-              }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  color: textColor,
+                  fontFamily: Fonts.sans,
+                },
+              ]}
               placeholder="My Server"
               placeholderTextColor={iconColor}
               value={serverName}
@@ -144,7 +150,7 @@ export default function ConnectServer() {
           </View>
 
           {/* Test Connection Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.testButton, { borderColor: tintColor }]}
             onPress={handleTestConnection}
             disabled={isConnecting}
@@ -155,7 +161,7 @@ export default function ConnectServer() {
           </TouchableOpacity>
 
           {/* Save Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.saveButton, { backgroundColor: tintColor }]}
             onPress={handleSave}
           >
@@ -167,7 +173,8 @@ export default function ConnectServer() {
 
         {/* Help Text */}
         <Text style={[styles.helpText, { color: iconColor, fontFamily: Fonts.sans }]}>
-          Enter your OpenCode server URL to connect. If your server requires authentication, enter the password.
+          Enter your OpenCode server URL to connect. If your server requires authentication, enter
+          the password.
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

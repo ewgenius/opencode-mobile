@@ -1,12 +1,5 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity,
-  RefreshControl
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { Fonts } from '@/constants/theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -15,8 +8,18 @@ import { MainContent } from '@/components/layout';
 
 // Placeholder data - will be replaced with actual store data
 const PLACEHOLDER_SESSIONS = [
-  { id: '1', name: 'Session 1', lastMessage: 'Hello, how can I help you today?', timestamp: '2 min ago' },
-  { id: '2', name: 'Session 2', lastMessage: 'Let me analyze that for you...', timestamp: '1 hour ago' },
+  {
+    id: '1',
+    name: 'Session 1',
+    lastMessage: 'Hello, how can I help you today?',
+    timestamp: '2 min ago',
+  },
+  {
+    id: '2',
+    name: 'Session 2',
+    lastMessage: 'Let me analyze that for you...',
+    timestamp: '1 hour ago',
+  },
   { id: '3', name: 'Session 3', lastMessage: 'The code has been updated.', timestamp: 'Yesterday' },
 ];
 
@@ -58,9 +61,7 @@ export default function ProjectDetail() {
       <ScrollView
         style={[styles.container, { backgroundColor }]}
         contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Project Header */}
         <View style={styles.projectHeader}>
@@ -74,7 +75,7 @@ export default function ProjectDetail() {
 
         {/* Action Buttons */}
         <View style={styles.actions}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: tintColor }]}
             onPress={handleNewSession}
           >
@@ -84,12 +85,17 @@ export default function ProjectDetail() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.actionButtonSecondary, { borderColor: tintColor }]}
             onPress={handleNewWorkspace}
           >
             <IconSymbol name="folder.badge.plus" size={20} color={tintColor} />
-            <Text style={[styles.actionButtonSecondaryText, { color: tintColor, fontFamily: Fonts.sans }]}>
+            <Text
+              style={[
+                styles.actionButtonSecondaryText,
+                { color: tintColor, fontFamily: Fonts.sans },
+              ]}
+            >
               New Workspace
             </Text>
           </TouchableOpacity>
@@ -101,7 +107,7 @@ export default function ProjectDetail() {
             Recent Sessions
           </Text>
 
-          {PLACEHOLDER_SESSIONS.map((session) => (
+          {PLACEHOLDER_SESSIONS.map(session => (
             <TouchableOpacity
               key={session.id}
               style={[styles.sessionCard, { backgroundColor: cardBackground }]}
@@ -114,7 +120,7 @@ export default function ProjectDetail() {
                 <Text style={[styles.sessionName, { color: textColor, fontFamily: Fonts.sans }]}>
                   {session.name}
                 </Text>
-                <Text 
+                <Text
                   style={[styles.sessionPreview, { color: iconColor, fontFamily: Fonts.sans }]}
                   numberOfLines={1}
                 >

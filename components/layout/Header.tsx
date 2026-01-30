@@ -26,17 +26,19 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
   };
 
   return (
-    <View style={[
-      styles.container, 
-      { 
-        backgroundColor,
-        paddingTop: insets.top,
-        borderBottomColor: 'rgba(0,0,0,0.1)',
-      }
-    ]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor,
+          paddingTop: insets.top,
+          borderBottomColor: 'rgba(0,0,0,0.1)',
+        },
+      ]}
+    >
       <View style={styles.content}>
         {/* Hamburger Menu */}
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={onMenuPress}
           style={styles.iconButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -45,13 +47,16 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
         </TouchableOpacity>
 
         {/* Title */}
-        <Text style={[styles.title, { color: textColor, fontFamily: Fonts.sans }]} numberOfLines={1}>
+        <Text
+          style={[styles.title, { color: textColor, fontFamily: Fonts.sans }]}
+          numberOfLines={1}
+        >
           {title}
         </Text>
 
         {/* Right Actions */}
         <View style={styles.rightActions}>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleAddServer}
             style={styles.iconButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -59,7 +64,7 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
             <IconSymbol name="plus" size={24} color={iconColor} />
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleSettings}
             style={styles.iconButton}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}

@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
   TouchableOpacity,
   TextInput,
   KeyboardAvoidingView,
-  Platform
+  Platform,
 } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { Fonts } from '@/constants/theme';
@@ -19,8 +19,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // Placeholder data - will be replaced with actual store data
 const PLACEHOLDER_MESSAGES = [
   { id: '1', role: 'user', content: 'Hello! Can you help me with a coding task?' },
-  { id: '2', role: 'assistant', content: 'Of course! I\'d be happy to help. What do you need assistance with?' },
-  { id: '3', role: 'user', content: 'I need to refactor some React code to use hooks instead of class components.' },
+  {
+    id: '2',
+    role: 'assistant',
+    content: "Of course! I'd be happy to help. What do you need assistance with?",
+  },
+  {
+    id: '3',
+    role: 'user',
+    content: 'I need to refactor some React code to use hooks instead of class components.',
+  },
 ];
 
 export default function SessionChat() {
@@ -58,7 +66,8 @@ export default function SessionChat() {
       const assistantResponse = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'This is a placeholder response. The actual chat functionality will be implemented in a future update.',
+        content:
+          'This is a placeholder response. The actual chat functionality will be implemented in a future update.',
       };
       setMessages(prev => [...prev, assistantResponse]);
     }, 1000);
@@ -69,7 +78,7 @@ export default function SessionChat() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor }]}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
@@ -79,7 +88,10 @@ export default function SessionChat() {
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <IconSymbol name="chevron.left" size={28} color={textColor} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: textColor, fontFamily: Fonts.sans }]} numberOfLines={1}>
+        <Text
+          style={[styles.headerTitle, { color: textColor, fontFamily: Fonts.sans }]}
+          numberOfLines={1}
+        >
           {sessionName}
         </Text>
         <TouchableOpacity style={styles.moreButton}>
@@ -96,29 +108,32 @@ export default function SessionChat() {
             contentContainerStyle={styles.messagesContent}
             onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
           >
-            {messages.map((message) => (
+            {messages.map(message => (
               <View
                 key={message.id}
                 style={[
                   styles.messageRow,
-                  message.role === 'user' ? styles.userMessageRow : styles.assistantMessageRow
+                  message.role === 'user' ? styles.userMessageRow : styles.assistantMessageRow,
                 ]}
               >
                 <View
                   style={[
                     styles.messageBubble,
-                    message.role === 'user' 
+                    message.role === 'user'
                       ? [styles.userBubble, { backgroundColor: userMessageBg }]
-                      : [styles.assistantBubble, { backgroundColor: assistantMessageBg, borderColor: 'rgba(0,0,0,0.1)' }]
+                      : [
+                          styles.assistantBubble,
+                          { backgroundColor: assistantMessageBg, borderColor: 'rgba(0,0,0,0.1)' },
+                        ],
                   ]}
                 >
                   <Text
                     style={[
                       styles.messageText,
-                      { 
+                      {
                         color: message.role === 'user' ? '#fff' : textColor,
-                        fontFamily: Fonts.sans 
-                      }
+                        fontFamily: Fonts.sans,
+                      },
                     ]}
                   >
                     {message.content}
@@ -129,15 +144,17 @@ export default function SessionChat() {
           </ScrollView>
 
           {/* Input Area */}
-          <View style={[styles.inputContainer, { backgroundColor, borderTopColor: 'rgba(0,0,0,0.1)' }]}>
+          <View
+            style={[styles.inputContainer, { backgroundColor, borderTopColor: 'rgba(0,0,0,0.1)' }]}
+          >
             <TextInput
               style={[
                 styles.input,
-                { 
-                  backgroundColor: 'rgba(0,0,0,0.05)', 
+                {
+                  backgroundColor: 'rgba(0,0,0,0.05)',
                   color: textColor,
-                  fontFamily: Fonts.sans 
-                }
+                  fontFamily: Fonts.sans,
+                },
               ]}
               placeholder="Type a message..."
               placeholderTextColor={iconColor}
@@ -146,16 +163,12 @@ export default function SessionChat() {
               multiline
               maxHeight={100}
             />
-            <TouchableOpacity 
-              style={[styles.sendButton, { backgroundColor: tintColor }]} 
+            <TouchableOpacity
+              style={[styles.sendButton, { backgroundColor: tintColor }]}
               onPress={handleSend}
               disabled={!inputText.trim()}
             >
-              <IconSymbol 
-                name="arrow.up" 
-                size={20} 
-                color="#fff" 
-              />
+              <IconSymbol name="arrow.up" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>

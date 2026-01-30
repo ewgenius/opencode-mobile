@@ -32,9 +32,7 @@ export default function Index() {
   return (
     <View style={[styles.container, { backgroundColor }]}>
       <ActivityIndicator size="large" color={tintColor} />
-      <Text style={[styles.text, { color: textColor, fontFamily: Fonts.sans }]}>
-        Loading...
-      </Text>
+      <Text style={[styles.text, { color: textColor, fontFamily: Fonts.sans }]}>Loading...</Text>
     </View>
   );
 }

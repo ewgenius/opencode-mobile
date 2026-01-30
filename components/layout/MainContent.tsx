@@ -12,13 +12,15 @@ export function MainContent({ children }: MainContentProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[
-      styles.container, 
-      { 
-        backgroundColor,
-        paddingBottom: insets.bottom,
-      }
-    ]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor,
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
       {children}
     </View>
   );

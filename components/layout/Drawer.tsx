@@ -1,12 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withSpring,
-  interpolate,
-  Extrapolation
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -60,30 +54,22 @@ export function Drawer({ visible, onClose, children }: DrawerProps) {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* Backdrop */}
-      <Animated.View 
-        style={[
-          StyleSheet.absoluteFill,
-          styles.backdrop,
-          backdropStyle
-        ]}
+      <Animated.View
+        style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}
         pointerEvents="auto"
       >
-        <TouchableOpacity 
-          style={StyleSheet.absoluteFill}
-          onPress={onClose}
-          activeOpacity={1}
-        />
+        <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
       </Animated.View>
-      
+
       {/* Drawer Content */}
-      <Animated.View 
+      <Animated.View
         style={[
           styles.drawer,
-          { 
+          {
             width: DRAWER_WIDTH,
             backgroundColor: sidebarBackground,
           },
-          drawerStyle
+          drawerStyle,
         ]}
         pointerEvents="auto"
       >

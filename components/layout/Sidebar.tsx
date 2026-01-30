@@ -55,8 +55,8 @@ export function Sidebar({ onItemPress }: SidebarProps) {
         <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
           Projects
         </Text>
-        
-        {PLACEHOLDER_PROJECTS.map((project) => (
+
+        {PLACEHOLDER_PROJECTS.map(project => (
           <TouchableOpacity
             key={project.id}
             style={styles.projectItem}
@@ -70,10 +70,7 @@ export function Sidebar({ onItemPress }: SidebarProps) {
         ))}
 
         {/* New Project Button */}
-        <TouchableOpacity 
-          style={styles.newProjectButton}
-          onPress={handleNewProjectPress}
-        >
+        <TouchableOpacity style={styles.newProjectButton} onPress={handleNewProjectPress}>
           <IconSymbol name="plus" size={20} color={tintColor} />
           <Text style={[styles.newProjectText, { color: tintColor, fontFamily: Fonts.sans }]}>
             New Project
@@ -83,10 +80,7 @@ export function Sidebar({ onItemPress }: SidebarProps) {
 
       {/* Bottom Actions */}
       <View style={styles.bottomSection}>
-        <TouchableOpacity 
-          style={styles.preferencesButton}
-          onPress={handlePreferencesPress}
-        >
+        <TouchableOpacity style={styles.preferencesButton} onPress={handlePreferencesPress}>
           <IconSymbol name="gear" size={20} color={iconColor} />
           <Text style={[styles.preferencesText, { color: textColor, fontFamily: Fonts.sans }]}>
             Preferences

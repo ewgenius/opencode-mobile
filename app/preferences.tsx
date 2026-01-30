@@ -1,12 +1,5 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity,
-  Switch
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { Fonts } from '@/constants/theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -65,7 +58,7 @@ export default function Preferences() {
           <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
             Appearance
           </Text>
-          
+
           <View style={[styles.card, { backgroundColor: cardBackground }]}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
@@ -88,7 +81,7 @@ export default function Preferences() {
           <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
             Notifications
           </Text>
-          
+
           <View style={[styles.card, { backgroundColor: cardBackground }]}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
@@ -111,7 +104,7 @@ export default function Preferences() {
           <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
             Connection
           </Text>
-          
+
           <View style={[styles.card, { backgroundColor: cardBackground }]}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
@@ -134,7 +127,7 @@ export default function Preferences() {
           <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
             About
           </Text>
-          
+
           <View style={[styles.card, { backgroundColor: cardBackground }]}>
             <TouchableOpacity style={styles.settingRow} onPress={handleAbout}>
               <View style={styles.settingInfo}>

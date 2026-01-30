@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert
+  Alert,
 } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { Fonts } from '@/constants/theme';
@@ -18,7 +18,7 @@ import { StatusBar } from 'expo-status-bar';
 
 export default function ServerSettings() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  
+
   // TODO: Load server data from store based on id
   const [serverUrl, setServerUrl] = useState('https://example.com');
   const [password, setPassword] = useState('');
@@ -38,10 +38,10 @@ export default function ServerSettings() {
     }
 
     setIsSaving(true);
-    
+
     // TODO: Update server in store
     console.log('Updating server:', { id, serverUrl, password, serverName });
-    
+
     setTimeout(() => {
       setIsSaving(false);
       router.back();
@@ -54,14 +54,14 @@ export default function ServerSettings() {
       'Are you sure you want to delete this server? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
+        {
+          text: 'Delete',
           style: 'destructive',
           onPress: () => {
             // TODO: Delete server from store
             console.log('Deleting server:', id);
             router.replace('/');
-          }
+          },
         },
       ]
     );
@@ -72,16 +72,13 @@ export default function ServerSettings() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor }]}
     >
       <StatusBar style="auto" />
-      
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
+
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
@@ -100,11 +97,14 @@ export default function ServerSettings() {
               Server URL
             </Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: 'rgba(0,0,0,0.05)', 
-                color: textColor,
-                fontFamily: Fonts.sans 
-              }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  color: textColor,
+                  fontFamily: Fonts.sans,
+                },
+              ]}
               placeholder="https://your-server.com"
               placeholderTextColor={iconColor}
               value={serverUrl}
@@ -120,11 +120,14 @@ export default function ServerSettings() {
               Password (optional)
             </Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: 'rgba(0,0,0,0.05)', 
-                color: textColor,
-                fontFamily: Fonts.sans 
-              }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  color: textColor,
+                  fontFamily: Fonts.sans,
+                },
+              ]}
               placeholder="Enter password if required"
               placeholderTextColor={iconColor}
               value={password}
@@ -138,11 +141,14 @@ export default function ServerSettings() {
               Server Name (optional)
             </Text>
             <TextInput
-              style={[styles.input, { 
-                backgroundColor: 'rgba(0,0,0,0.05)', 
-                color: textColor,
-                fontFamily: Fonts.sans 
-              }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: 'rgba(0,0,0,0.05)',
+                  color: textColor,
+                  fontFamily: Fonts.sans,
+                },
+              ]}
               placeholder="My Server"
               placeholderTextColor={iconColor}
               value={serverName}
@@ -151,7 +157,7 @@ export default function ServerSettings() {
           </View>
 
           {/* Save Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.saveButton, { backgroundColor: tintColor }]}
             onPress={handleSave}
             disabled={isSaving}
@@ -167,8 +173,8 @@ export default function ServerSettings() {
           <Text style={[styles.dangerTitle, { color: dangerColor, fontFamily: Fonts.sans }]}>
             Danger Zone
           </Text>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.deleteButton, { borderColor: dangerColor }]}
             onPress={handleDelete}
           >
