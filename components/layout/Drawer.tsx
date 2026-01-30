@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -13,39 +12,7 @@ interface DrawerProps {
 }
 
 export function Drawer({ visible, onClose, children }: DrawerProps) {
-  const translateX = useSharedValue(-DRAWER_WIDTH);
-  const backdropOpacity = useSharedValue(0);
   const sidebarBackground = useThemeColor({}, 'background');
-
-  useEffect(() => {
-    if (visible) {
-      translateX.value = withSpring(0, {
-        damping: 25,
-        stiffness: 200,
-      });
-      backdropOpacity.value = withSpring(1, {
-        damping: 25,
-        stiffness: 200,
-      });
-    } else {
-      translateX.value = withSpring(-DRAWER_WIDTH, {
-        damping: 25,
-        stiffness: 200,
-      });
-      backdropOpacity.value = withSpring(0, {
-        damping: 25,
-        stiffness: 200,
-      });
-    }
-  }, [visible, translateX, backdropOpacity]);
-
-  const drawerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
-
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: backdropOpacity.value,
-  }));
 
   if (!visible) {
     return null;
@@ -54,27 +21,23 @@ export function Drawer({ visible, onClose, children }: DrawerProps) {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* Backdrop */}
-      <Animated.View
-        style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}
-        pointerEvents="auto"
-      >
+      <View style={[StyleSheet.absoluteFill, styles.backdrop]} pointerEvents="auto">
         <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
-      </Animated.View>
+      </View>
 
       {/* Drawer Content */}
-      <Animated.View
+      <View
         style={[
           styles.drawer,
           {
             width: DRAWER_WIDTH,
             backgroundColor: sidebarBackground,
           },
-          drawerStyle,
         ]}
         pointerEvents="auto"
       >
         {children}
-      </Animated.View>
+      </View>
     </View>
   );
 }
