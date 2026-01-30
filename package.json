@@ -1,7 +1,7 @@
 {
   "name": "opencode-mobile",
   "main": "expo-router/entry",
-  "version": "0.1.0-alpha.10",
+  "version": "0.1.0-alpha.11",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
