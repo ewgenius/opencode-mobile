@@ -1,137 +1,178 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { Fonts } from '@/constants/theme';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import React, { useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTheme } from '@/components/ThemeProvider';
+import { useFonts } from '@/hooks/useFonts';
 import { MainContent } from '@/components/layout';
-
-// Placeholder data - will be replaced with actual store data
-const PLACEHOLDER_SESSIONS = [
-  {
-    id: '1',
-    name: 'Session 1',
-    lastMessage: 'Hello, how can I help you today?',
-    timestamp: '2 min ago',
-  },
-  {
-    id: '2',
-    name: 'Session 2',
-    lastMessage: 'Let me analyze that for you...',
-    timestamp: '1 hour ago',
-  },
-  { id: '3', name: 'Session 3', lastMessage: 'The code has been updated.', timestamp: 'Yesterday' },
-];
+import { Button } from '@/components/ui/button';
+import { WorkspaceGroup, Session } from '@/components/project';
+import { useSessions } from '@/hooks/useQueries';
+import { useCreateSession } from '@/hooks/useMutations';
+import { useProjectStore } from '@/stores/projectStore';
 
 export default function ProjectDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const [refreshing, setRefreshing] = React.useState(false);
+  const { id: projectId } = useLocalSearchParams<{ id: string }>();
+  const { colors } = useTheme();
+  const { ui } = useFonts();
 
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const iconColor = useThemeColor({}, 'icon');
-  const cardBackground = useThemeColor({}, 'background');
+  // Fetch sessions data
+  const {
+    data: sessions,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useSessions(projectId);
 
-  // TODO: Load project data from store based on id
-  const projectName = `Project ${id}`;
+  // Create session mutation
+  const createSession = useCreateSession();
 
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    // TODO: Fetch fresh data from server
-    setTimeout(() => setRefreshing(false), 1000);
+  // Get project name from store
+  const project = useProjectStore(state => state.getProjectById(projectId || ''));
+  const projectName = project?.name || `Project ${projectId}`;
+
+  // Group sessions by workspace
+  const groupedSessions = useMemo(() => {
+    if (!sessions) return {};
+
+    return sessions.reduce(
+      (acc, session) => {
+        const key = session.workspaceId || 'default';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(session);
+        return acc;
+      },
+      {} as Record<string, Session[]>
+    );
+  }, [sessions]);
+
+  // Handle refresh
+  const onRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  // Handle session press
+  const handleSessionPress = useCallback((sessionId: string) => {
+    router.push(`/session/${sessionId}`);
   }, []);
 
-  const handleSessionPress = (sessionId: string) => {
-    router.push(`/session/${sessionId}`);
-  };
+  // Handle new session
+  const handleNewSession = useCallback(() => {
+    if (!projectId) return;
 
-  const handleNewSession = () => {
-    // TODO: Create new session and navigate to it
-    console.log('Create new session');
-  };
+    createSession.mutate(
+      { projectId },
+      {
+        onSuccess: data => {
+          router.push(`/session/${data.id}`);
+        },
+      }
+    );
+  }, [projectId, createSession]);
 
-  const handleNewWorkspace = () => {
-    // TODO: Create new workspace
-    console.log('Create new workspace');
-  };
+  // Handle new workspace
+  const handleNewWorkspace = useCallback(() => {
+    // TODO: Implement workspace creation when API supports it
+    console.log('Create new workspace - not yet implemented');
+  }, []);
+
+  // Render loading state
+  if (isLoading) {
+    return (
+      <MainContent>
+        <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.surfaceBrand} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary, ...ui }]}>
+            Loading sessions...
+          </Text>
+        </View>
+      </MainContent>
+    );
+  }
+
+  // Render error state
+  if (isError) {
+    return (
+      <MainContent>
+        <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+          <Text style={[styles.errorTitle, { color: colors.text, ...ui }]}>
+            Failed to load sessions
+          </Text>
+          <Text style={[styles.errorMessage, { color: colors.textSecondary, ...ui }]}>
+            {error?.message || 'An error occurred while fetching sessions'}
+          </Text>
+          <Button onPress={() => refetch()} variant="secondary">
+            Try Again
+          </Button>
+        </View>
+      </MainContent>
+    );
+  }
+
+  const workspaceIds = Object.keys(groupedSessions);
+  const totalSessions = sessions?.length || 0;
 
   return (
     <MainContent>
       <ScrollView
-        style={[styles.container, { backgroundColor }]}
+        style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={onRefresh}
+            tintColor={colors.surfaceBrand}
+          />
+        }
       >
         {/* Project Header */}
         <View style={styles.projectHeader}>
-          <Text style={[styles.projectName, { color: textColor, fontFamily: Fonts.sans }]}>
-            {projectName}
-          </Text>
-          <Text style={[styles.projectSubtitle, { color: iconColor, fontFamily: Fonts.sans }]}>
-            {PLACEHOLDER_SESSIONS.length} sessions
+          <Text style={[styles.projectName, { color: colors.text, ...ui }]}>{projectName}</Text>
+          <Text style={[styles.projectSubtitle, { color: colors.textSecondary, ...ui }]}>
+            {totalSessions} session{totalSessions !== 1 ? 's' : ''}
           </Text>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actions}>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: tintColor }]}
-            onPress={handleNewSession}
-          >
-            <IconSymbol name="plus.bubble" size={20} color="#fff" />
-            <Text style={[styles.actionButtonText, { color: '#fff', fontFamily: Fonts.sans }]}>
-              New Session
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButtonSecondary, { borderColor: tintColor }]}
-            onPress={handleNewWorkspace}
-          >
-            <IconSymbol name="folder.badge.plus" size={20} color={tintColor} />
-            <Text
-              style={[
-                styles.actionButtonSecondaryText,
-                { color: tintColor, fontFamily: Fonts.sans },
-              ]}
-            >
-              New Workspace
-            </Text>
-          </TouchableOpacity>
+          <Button variant="primary" onPress={handleNewSession} disabled={createSession.isPending}>
+            {createSession.isPending ? 'Creating...' : 'New Session'}
+          </Button>
+          <Button variant="secondary" onPress={handleNewWorkspace}>
+            New Workspace
+          </Button>
         </View>
 
         {/* Sessions List */}
         <View style={styles.sessionsSection}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
-            Recent Sessions
-          </Text>
-
-          {PLACEHOLDER_SESSIONS.map(session => (
-            <TouchableOpacity
-              key={session.id}
-              style={[styles.sessionCard, { backgroundColor: cardBackground }]}
-              onPress={() => handleSessionPress(session.id)}
-            >
-              <View style={styles.sessionIcon}>
-                <IconSymbol name="bubble.left" size={24} color={tintColor} />
-              </View>
-              <View style={styles.sessionInfo}>
-                <Text style={[styles.sessionName, { color: textColor, fontFamily: Fonts.sans }]}>
-                  {session.name}
-                </Text>
-                <Text
-                  style={[styles.sessionPreview, { color: iconColor, fontFamily: Fonts.sans }]}
-                  numberOfLines={1}
-                >
-                  {session.lastMessage}
-                </Text>
-              </View>
-              <Text style={[styles.sessionTime, { color: iconColor, fontFamily: Fonts.sans }]}>
-                {session.timestamp}
+          {workspaceIds.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={[styles.emptyTitle, { color: colors.text, ...ui }]}>
+                No sessions yet
               </Text>
-            </TouchableOpacity>
-          ))}
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary, ...ui }]}>
+                Create your first session to get started
+              </Text>
+            </View>
+          ) : (
+            workspaceIds.map(workspaceId => (
+              <WorkspaceGroup
+                key={workspaceId}
+                workspaceId={workspaceId}
+                sessions={groupedSessions[workspaceId]}
+                onSessionPress={handleSessionPress}
+                defaultOpen={true}
+              />
+            ))
+          )}
         </View>
       </ScrollView>
     </MainContent>
@@ -144,6 +185,27 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 32,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 24,
   },
   projectHeader: {
     marginBottom: 24,
@@ -159,74 +221,21 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 32,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    height: 44,
-    borderRadius: 8,
-  },
-  actionButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  actionButtonSecondary: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    height: 44,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  actionButtonSecondaryText: {
-    fontSize: 15,
-    fontWeight: '600',
+    marginBottom: 24,
   },
   sessionsSection: {
-    gap: 12,
+    gap: 8,
   },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    opacity: 0.7,
-  },
-  sessionCard: {
-    flexDirection: 'row',
+  emptyState: {
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    paddingVertical: 48,
   },
-  sessionIcon: {
-    marginRight: 12,
-  },
-  sessionInfo: {
-    flex: 1,
-  },
-  sessionName: {
-    fontSize: 16,
+  emptyTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 8,
   },
-  sessionPreview: {
+  emptySubtitle: {
     fontSize: 14,
-    opacity: 0.8,
-  },
-  sessionTime: {
-    fontSize: 12,
-    opacity: 0.6,
   },
 });
