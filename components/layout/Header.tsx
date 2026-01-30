@@ -14,7 +14,7 @@ interface HeaderProps {
 export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
   const backgroundColor = colors.background;
   const textColor = colors.text;
   const iconColor = colors.icon;
@@ -49,10 +49,7 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
         </TouchableOpacity>
 
         {/* Title */}
-        <Text
-          style={[styles.title, { color: textColor, fontFamily: ui.fontFamily }]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.title, { color: textColor, fontFamily: uiFont }]} numberOfLines={1}>
           {title}
         </Text>
 

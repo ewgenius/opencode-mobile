@@ -28,7 +28,7 @@ const MODEL_OPTIONS: SelectOption[] = [
 export default function SessionChat() {
   const { id: sessionId } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
   const { isConnected } = useApi();
   const insets = useSafeAreaInsets();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -86,7 +86,7 @@ export default function SessionChat() {
   };
 
   const headerTitleStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: 17,
     fontWeight: '600' as const,
     color: colors.text,
@@ -117,7 +117,7 @@ export default function SessionChat() {
   };
 
   const offlineTextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: 14,
     color: colors.textOnWarning,
     fontWeight: '500' as const,

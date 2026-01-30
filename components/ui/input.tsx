@@ -41,7 +41,7 @@ export function Input({
   ...rest
 }: InputProps) {
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
   const [isFocused, setIsFocused] = useState(false);
   const sizeConfig = sizeStyles[size];
 
@@ -62,7 +62,7 @@ export function Input({
   };
 
   const labelStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: sizeConfig.fontSize - 2,
     color: colors.textSecondary,
     fontWeight: '500',
@@ -82,7 +82,7 @@ export function Input({
   };
 
   const inputStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     flex: 1,
     fontSize: sizeConfig.fontSize,
     color: colors.text,
@@ -91,7 +91,7 @@ export function Input({
   };
 
   const helperStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: sizeConfig.fontSize - 2,
     color: error ? colors.textOnError : colors.textTertiary,
   };

@@ -2,7 +2,7 @@
  * Font Configuration
  *
  * Defines available fonts for UI and code display.
- * System fonts are used by default for immediate availability.
+ * Uses Geist Mono as the default custom font.
  */
 
 import { Platform } from 'react-native';
@@ -20,7 +20,10 @@ export interface FontOption {
 
 // Platform-specific system UI fonts
 const getSystemUIFonts = (): FontOption[] => {
-  const baseFonts: FontOption[] = [{ value: 'System', label: 'System Default', family: 'System' }];
+  const baseFonts: FontOption[] = [
+    { value: 'GeistMono', label: 'Geist Mono', family: 'GeistMono-Regular' },
+    { value: 'System', label: 'System Default', family: 'System' },
+  ];
 
   if (Platform.OS === 'ios') {
     return [
@@ -52,6 +55,7 @@ const getSystemUIFonts = (): FontOption[] => {
 
 // Monospace fonts for code display
 export const MONOSPACE_FONTS: FontOption[] = [
+  { value: 'GeistMono', label: 'Geist Mono', family: 'GeistMono-Regular' },
   { value: 'System', label: 'System Monospace', family: 'monospace' },
   { value: 'Courier', label: 'Courier', family: 'Courier' },
   { value: 'Courier New', label: 'Courier New', family: 'Courier New' },
@@ -66,23 +70,23 @@ export const MONOSPACE_FONTS: FontOption[] = [
 // System fonts for UI
 export const SYSTEM_FONTS: FontOption[] = getSystemUIFonts();
 
-// Font loading status tracker (for future custom font support)
-export const LOADED_FONTS = new Set<string>();
+// Font loading status tracker
+export const LOADED_FONTS = new Set<string>(['GeistMono-Regular', 'GeistMono-Italic']);
 
-// Default font configuration
+// Default font configuration - uses Geist Mono
 export const DEFAULT_FONT_CONFIG: FontConfig = {
-  ui: 'System',
-  code: 'System',
+  ui: 'GeistMono',
+  code: 'GeistMono',
 };
 
 // Get font family for a given font value
 export function getFontFamily(value: string, type: 'ui' | 'code'): string {
   if (type === 'ui') {
     const font = SYSTEM_FONTS.find(f => f.value === value);
-    return font?.family || 'System';
+    return font?.family || 'GeistMono-Regular';
   } else {
     const font = MONOSPACE_FONTS.find(f => f.value === value);
-    return font?.family || 'monospace';
+    return font?.family || 'GeistMono-Regular';
   }
 }
 

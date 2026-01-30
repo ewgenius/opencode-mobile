@@ -2,53 +2,66 @@
  * Font Hooks
  *
  * React hooks for accessing and applying font preferences.
- * Provides immediate font style objects for UI and code components.
+ * Returns font family strings for direct use in style objects.
  */
 
 import { useMemo } from 'react';
-import { usePreferencesStore, useUIFont, useCodeFont } from '@/stores/preferencesStore';
+import {
+  usePreferencesStore,
+  useUIFont as useUIFontConfig,
+  useCodeFont as useCodeFontConfig,
+} from '@/stores/preferencesStore';
 import { getFontFamily, type FontConfig } from '@/fonts/config';
 
-export interface FontStyles {
-  ui: { fontFamily: string };
-  code: { fontFamily: string };
+export interface FontFamilies {
+  uiFont: string;
+  codeFont: string;
 }
 
 /**
- * Hook to get both UI and code font styles
- * @returns Object with ui and code font style objects
+ * Hook to get both UI and code font family strings
+ * @returns Object with uiFont and codeFont strings
+ * @example
+ * const { uiFont, codeFont } = useFonts();
+ * <Text style={{ fontFamily: uiFont }}>Hello</Text>
  */
-export function useFonts(): FontStyles {
-  const uiFont = useUIFont();
-  const codeFont = useCodeFont();
+export function useFonts(): FontFamilies {
+  const uiFont = useUIFontConfig();
+  const codeFont = useCodeFontConfig();
 
   return useMemo(
     () => ({
-      ui: { fontFamily: getFontFamily(uiFont, 'ui') },
-      code: { fontFamily: getFontFamily(codeFont, 'code') },
+      uiFont: getFontFamily(uiFont, 'ui'),
+      codeFont: getFontFamily(codeFont, 'code'),
     }),
     [uiFont, codeFont]
   );
 }
 
 /**
- * Hook to get UI font style only
- * @returns UI font style object
+ * Hook to get UI font family string only
+ * @returns UI font family string
+ * @example
+ * const uiFont = useUIFont();
+ * <Text style={{ fontFamily: uiFont }}>Hello</Text>
  */
-export function useUIFontStyle(): { fontFamily: string } {
-  const uiFont = useUIFont();
+export function useUIFont(): string {
+  const uiFont = useUIFontConfig();
 
-  return useMemo(() => ({ fontFamily: getFontFamily(uiFont, 'ui') }), [uiFont]);
+  return useMemo(() => getFontFamily(uiFont, 'ui'), [uiFont]);
 }
 
 /**
- * Hook to get code font style only
- * @returns Code font style object
+ * Hook to get code font family string only
+ * @returns Code font family string
+ * @example
+ * const codeFont = useCodeFont();
+ * <Text style={{ fontFamily: codeFont }}>code</Text>
  */
-export function useCodeFontStyle(): { fontFamily: string } {
-  const codeFont = useCodeFont();
+export function useCodeFont(): string {
+  const codeFont = useCodeFontConfig();
 
-  return useMemo(() => ({ fontFamily: getFontFamily(codeFont, 'code') }), [codeFont]);
+  return useMemo(() => getFontFamily(codeFont, 'code'), [codeFont]);
 }
 
 /**
@@ -56,8 +69,8 @@ export function useCodeFontStyle(): { fontFamily: string } {
  * @returns FontConfig with raw font values
  */
 export function useFontConfig(): FontConfig {
-  const uiFont = useUIFont();
-  const codeFont = useCodeFont();
+  const uiFont = useUIFontConfig();
+  const codeFont = useCodeFontConfig();
 
   return useMemo(
     () => ({

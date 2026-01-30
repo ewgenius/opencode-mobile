@@ -52,7 +52,7 @@ export function Select({
   containerStyle,
 }: SelectProps) {
   const { colors, isDark } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
   const [isOpen, setIsOpen] = useState(false);
   const sizeConfig = sizeStyles[size];
 
@@ -72,7 +72,7 @@ export function Select({
   };
 
   const labelStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: sizeConfig.fontSize - 2,
     color: colors.textSecondary,
     fontWeight: '500',
@@ -93,13 +93,13 @@ export function Select({
   };
 
   const triggerTextStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: sizeConfig.fontSize,
     color: selectedOption ? colors.text : colors.textTertiary,
   };
 
   const helperStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: sizeConfig.fontSize - 2,
     color: error ? colors.textOnError : colors.textTertiary,
   };
@@ -135,7 +135,7 @@ export function Select({
   });
 
   const optionTextStyle = (isSelected: boolean): TextStyle => ({
-    ...ui,
+    fontFamily: uiFont,
     fontSize: sizeConfig.fontSize,
     color: isSelected ? colors.textOnInteractive : colors.text,
     fontWeight: isSelected ? '600' : '400',

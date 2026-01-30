@@ -45,7 +45,7 @@ function formatTimestamp(timestamp: number): string {
 
 export function SessionItem({ session, onPress }: SessionItemProps) {
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
 
   return (
     <TouchableOpacity
@@ -57,10 +57,10 @@ export function SessionItem({ session, onPress }: SessionItemProps) {
         <IconSymbol name="bubble.left" size={20} color={colors.surfaceBrand} />
       </View>
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.text, ...ui }]} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.text, fontFamily: uiFont }]} numberOfLines={1}>
           {session.title}
         </Text>
-        <Text style={[styles.timestamp, { color: colors.textTertiary, ...ui }]}>
+        <Text style={[styles.timestamp, { color: colors.textTertiary, fontFamily: uiFont }]}>
           {formatTimestamp(session.updatedAt)}
         </Text>
       </View>

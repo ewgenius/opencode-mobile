@@ -21,7 +21,7 @@ interface MessageItemProps {
 
 export function MessageItem({ message }: MessageItemProps) {
   const { colors } = useTheme();
-  const { ui, code } = useFonts();
+  const { uiFont, codeFont } = useFonts();
   const isUser = message.role === 'user';
 
   const containerStyle: ViewStyle = {
@@ -43,7 +43,7 @@ export function MessageItem({ message }: MessageItemProps) {
   };
 
   const timestampStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: 11,
     color: colors.textTertiary,
     marginTop: 4,
@@ -53,20 +53,20 @@ export function MessageItem({ message }: MessageItemProps) {
   const markdownStyles = useMemo(
     () => ({
       body: {
-        ...ui,
+        fontFamily: uiFont,
         fontSize: 16,
         lineHeight: 22,
         color: isUser ? colors.textOnBrand : colors.text,
       } as TextStyle,
       paragraph: {
-        ...ui,
+        fontFamily: uiFont,
         fontSize: 16,
         lineHeight: 22,
         color: isUser ? colors.textOnBrand : colors.text,
         marginVertical: 4,
       } as TextStyle,
       code_inline: {
-        ...code,
+        fontFamily: codeFont,
         fontSize: 14,
         backgroundColor: isUser ? 'rgba(0,0,0,0.1)' : colors.backgroundTertiary,
         color: isUser ? colors.textOnBrand : colors.syntaxPrimitive,
@@ -75,7 +75,7 @@ export function MessageItem({ message }: MessageItemProps) {
         borderRadius: 4,
       } as TextStyle,
       code_block: {
-        ...code,
+        fontFamily: codeFont,
         fontSize: 14,
         lineHeight: 20,
         backgroundColor: isUser ? 'rgba(0,0,0,0.15)' : colors.backgroundTertiary,
@@ -84,7 +84,7 @@ export function MessageItem({ message }: MessageItemProps) {
         marginVertical: 8,
       } as ViewStyle,
       fence: {
-        ...code,
+        fontFamily: codeFont,
         fontSize: 14,
         lineHeight: 20,
         backgroundColor: isUser ? 'rgba(0,0,0,0.15)' : colors.backgroundTertiary,
@@ -99,22 +99,22 @@ export function MessageItem({ message }: MessageItemProps) {
         marginVertical: 8,
       } as ViewStyle,
       em: {
-        ...ui,
+        fontFamily: uiFont,
         fontStyle: 'italic',
         color: isUser ? colors.textOnBrand : colors.text,
       } as TextStyle,
       strong: {
-        ...ui,
+        fontFamily: uiFont,
         fontWeight: '700',
         color: isUser ? colors.textOnBrand : colors.textStrong,
       } as TextStyle,
       link: {
-        ...ui,
+        fontFamily: uiFont,
         color: isUser ? colors.textOnBrand : colors.textInteractive,
         textDecorationLine: 'underline',
       } as TextStyle,
       blockquote: {
-        ...ui,
+        fontFamily: uiFont,
         borderLeftWidth: 4,
         borderLeftColor: isUser ? 'rgba(255,255,255,0.4)' : colors.borderActive,
         paddingLeft: 12,
@@ -128,35 +128,35 @@ export function MessageItem({ message }: MessageItemProps) {
         marginVertical: 4,
       } as ViewStyle,
       list_item: {
-        ...ui,
+        fontFamily: uiFont,
         fontSize: 16,
         lineHeight: 22,
         color: isUser ? colors.textOnBrand : colors.text,
         marginVertical: 2,
       } as TextStyle,
       heading1: {
-        ...ui,
+        fontFamily: uiFont,
         fontSize: 24,
         fontWeight: '700',
         color: isUser ? colors.textOnBrand : colors.textStrong,
         marginVertical: 8,
       } as TextStyle,
       heading2: {
-        ...ui,
+        fontFamily: uiFont,
         fontSize: 20,
         fontWeight: '600',
         color: isUser ? colors.textOnBrand : colors.textStrong,
         marginVertical: 6,
       } as TextStyle,
       heading3: {
-        ...ui,
+        fontFamily: uiFont,
         fontSize: 18,
         fontWeight: '600',
         color: isUser ? colors.textOnBrand : colors.textStrong,
         marginVertical: 4,
       } as TextStyle,
     }),
-    [colors, ui, code, isUser]
+    [colors, uiFont, codeFont, isUser]
   );
 
   const formatTimestamp = (timestamp: number): string => {

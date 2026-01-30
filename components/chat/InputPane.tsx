@@ -33,7 +33,7 @@ export function InputPane({
   disabled = false,
 }: InputPaneProps) {
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
   const [content, setContent] = useState('');
   const [selectedAgent, setSelectedAgent] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
@@ -64,7 +64,7 @@ export function InputPane({
   };
 
   const inputStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     flex: 1,
     minHeight: 40,
     maxHeight: 120,

@@ -160,7 +160,7 @@ function tokenize(code: string, language: string): Token[] {
 
 export function CodeBlock({ code, language, isUser = false }: CodeBlockProps) {
   const { colors } = useTheme();
-  const { code: codeFont } = useFonts();
+  const { codeFont } = useFonts();
   const [copied, setCopied] = useState(false);
 
   const normalizedLang = normalizeLanguage(language);
@@ -214,7 +214,7 @@ export function CodeBlock({ code, language, isUser = false }: CodeBlockProps) {
   };
 
   const languageTextStyle: TextStyle = {
-    ...codeFont,
+    fontFamily: codeFont,
     fontSize: 12,
     color: isUser ? colors.textOnBrand : colors.textSecondary,
     textTransform: 'uppercase',
@@ -236,7 +236,7 @@ export function CodeBlock({ code, language, isUser = false }: CodeBlockProps) {
   };
 
   const copyTextStyle: TextStyle = {
-    ...codeFont,
+    fontFamily: codeFont,
     fontSize: 12,
     color: copied
       ? isUser
@@ -257,7 +257,7 @@ export function CodeBlock({ code, language, isUser = false }: CodeBlockProps) {
   };
 
   const lineNumberStyle: TextStyle = {
-    ...codeFont,
+    fontFamily: codeFont,
     fontSize: 14,
     lineHeight: 20,
     color: colors.textTertiary,
@@ -268,7 +268,7 @@ export function CodeBlock({ code, language, isUser = false }: CodeBlockProps) {
   };
 
   const codeTextStyle: TextStyle = {
-    ...codeFont,
+    fontFamily: codeFont,
     fontSize: 14,
     lineHeight: 20,
     flex: 1,

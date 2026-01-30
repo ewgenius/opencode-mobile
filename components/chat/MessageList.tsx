@@ -26,7 +26,7 @@ export function MessageList({
   isRefreshing = false,
 }: MessageListProps) {
   const { colors } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
   const listRef = useRef<FlashListRef<Message> | null>(null);
 
   const renderItem: ListRenderItem<Message> = useCallback(
@@ -50,7 +50,7 @@ export function MessageList({
   };
 
   const emptyTitleStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: 18,
     fontWeight: '600',
     color: colors.textSecondary,
@@ -58,7 +58,7 @@ export function MessageList({
   };
 
   const emptySubtitleStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: 14,
     color: colors.textTertiary,
     marginTop: 8,
@@ -73,7 +73,7 @@ export function MessageList({
   };
 
   const loadingTextStyle: TextStyle = {
-    ...ui,
+    fontFamily: uiFont,
     fontSize: 16,
     color: colors.textSecondary,
     marginTop: 16,
