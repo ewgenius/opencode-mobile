@@ -26,7 +26,10 @@ interface ThemeProviderProps {
   defaultTheme?: string;
 }
 
-export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps): React.ReactElement {
+export function ThemeProvider({
+  children,
+  defaultTheme,
+}: ThemeProviderProps): React.ReactElement | null {
   const systemColorScheme = useColorScheme();
   const themeMode = useThemeMode();
   const colorSchemeId = useColorSchemeId();
@@ -81,6 +84,11 @@ export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps): R
     return effectiveMode === 'dark' ? theme.dark : theme.light;
   }, [theme, effectiveMode]);
 
+  // Track if theme is ready (loaded or has fallback)
+  const isReady = useMemo(() => {
+    return !isLoading || theme !== null;
+  }, [isLoading, theme]);
+
   // Context value
   const contextValue: ThemeContextValue = useMemo(
     () => ({
@@ -92,14 +100,14 @@ export function ThemeProvider({ children, defaultTheme }: ThemeProviderProps): R
       setThemeMode,
       setColorScheme,
       isDark: effectiveMode === 'dark',
+      isReady,
     }),
-    [theme, colors, effectiveMode, themeMode, colorSchemeId, setThemeMode, setColorScheme]
+    [theme, colors, effectiveMode, themeMode, colorSchemeId, setThemeMode, setColorScheme, isReady]
   );
 
-  if (isLoading) {
-    // Return a loading state or null while theme is loading
-    // In a real app, you might want to show a splash screen
-    return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
+  // Block rendering until theme is ready to prevent color flashes
+  if (!isReady) {
+    return null;
   }
 
   return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;

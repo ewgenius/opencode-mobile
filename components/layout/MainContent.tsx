@@ -1,14 +1,15 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface MainContentProps {
   children: React.ReactNode;
 }
 
 export function MainContent({ children }: MainContentProps) {
-  const backgroundColor = useThemeColor({}, 'background');
+  const { colors } = useTheme();
+  const backgroundColor = colors.background;
   const insets = useSafeAreaInsets();
 
   return (
