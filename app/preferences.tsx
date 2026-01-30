@@ -6,7 +6,15 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { router } from 'expo-router';
 import { MainContent } from '@/components/layout';
 import { useTheme } from '@/components/ThemeProvider';
-import { usePreferencesStore, useThemeMode, useColorSchemeId } from '@/stores/preferencesStore';
+import {
+  usePreferencesStore,
+  useThemeMode,
+  useColorSchemeId,
+  useUIFont,
+  useCodeFont,
+} from '@/stores/preferencesStore';
+import { SYSTEM_FONTS, MONOSPACE_FONTS, getFontLabel } from '@/fonts/config';
+import { useFonts } from '@/hooks/useFonts';
 import { getAvailableThemes, type ThemeMetadata } from '@/themes';
 import type { ThemeMode } from '@/themes/types';
 
@@ -14,12 +22,17 @@ export default function Preferences() {
   const { colors } = useTheme();
   const themeMode = useThemeMode();
   const colorSchemeId = useColorSchemeId();
-  const { setThemeMode, setColorScheme } = usePreferencesStore();
+  const uiFont = useUIFont();
+  const codeFont = useCodeFont();
+  const fonts = useFonts();
+  const { setThemeMode, setColorScheme, setUIFont, setCodeFont } = usePreferencesStore();
   const [notifications, setNotifications] = React.useState(true);
   const [autoConnect, setAutoConnect] = React.useState(true);
   const [availableThemes, setAvailableThemes] = useState<ThemeMetadata[]>([]);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showModePicker, setShowModePicker] = useState(false);
+  const [showUIFontPicker, setShowUIFontPicker] = useState(false);
+  const [showCodeFontPicker, setShowCodeFontPicker] = useState(false);
 
   useEffect(() => {
     loadThemes();
@@ -48,6 +61,16 @@ export default function Preferences() {
   const handleColorSchemeChange = (schemeId: string) => {
     setColorScheme(schemeId);
     setShowThemePicker(false);
+  };
+
+  const handleUIFontChange = (font: string) => {
+    setUIFont(font);
+    setShowUIFontPicker(false);
+  };
+
+  const handleCodeFontChange = (font: string) => {
+    setCodeFont(font);
+    setShowCodeFontPicker(false);
   };
 
   const getThemeModeLabel = (mode: ThemeMode) => {
@@ -237,6 +260,174 @@ export default function Preferences() {
           </View>
         </Modal>
 
+        {/* Typography Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
+            Typography
+          </Text>
+
+          <View style={[styles.card, { backgroundColor: cardBackground }]}>
+            {/* UI Font Selector */}
+            <TouchableOpacity style={styles.settingRow} onPress={() => setShowUIFontPicker(true)}>
+              <View style={styles.settingInfo}>
+                <IconSymbol name="textformat" size={22} color={iconColor} />
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                  UI Font
+                </Text>
+              </View>
+              <View style={styles.valueContainer}>
+                <Text style={[styles.valueLabel, { color: iconColor, fontFamily: Fonts.sans }]}>
+                  {getFontLabel(uiFont, 'ui')}
+                </Text>
+                <IconSymbol name="chevron.right" size={20} color={iconColor} />
+              </View>
+            </TouchableOpacity>
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            {/* Code Font Selector */}
+            <TouchableOpacity style={styles.settingRow} onPress={() => setShowCodeFontPicker(true)}>
+              <View style={styles.settingInfo}>
+                <IconSymbol name="doc.text" size={22} color={iconColor} />
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                  Code Font
+                </Text>
+              </View>
+              <View style={styles.valueContainer}>
+                <Text style={[styles.valueLabel, { color: iconColor, fontFamily: Fonts.sans }]}>
+                  {getFontLabel(codeFont, 'code')}
+                </Text>
+                <IconSymbol name="chevron.right" size={20} color={iconColor} />
+              </View>
+            </TouchableOpacity>
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            {/* Font Preview */}
+            <View style={styles.previewContainer}>
+              <Text style={[styles.previewLabel, { color: iconColor, fontFamily: Fonts.sans }]}>
+                Preview
+              </Text>
+              <View style={[styles.previewBox, { backgroundColor: colors.surface }]}>
+                <Text style={[{ color: textColor }, fonts.ui]}>
+                  UI Font: The quick brown fox jumps over the lazy dog
+                </Text>
+                <Text style={[{ color: textColor, marginTop: 8 }, fonts.code]}>
+                  Code Font: function hello() {'{'} return 42; {'}'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* UI Font Picker Modal */}
+        <Modal
+          visible={showUIFontPicker}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowUIFontPicker(false)}
+        >
+          <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+            <View style={[styles.modalContent, { backgroundColor: cardBackground }]}>
+              <Text style={[styles.modalTitle, { color: textColor, fontFamily: Fonts.sans }]}>
+                Select UI Font
+              </Text>
+              <ScrollView style={styles.themeList}>
+                {SYSTEM_FONTS.map(font => (
+                  <TouchableOpacity
+                    key={font.value}
+                    style={[
+                      styles.modalOption,
+                      uiFont === font.value && { backgroundColor: colors.surfaceInteractive },
+                    ]}
+                    onPress={() => handleUIFontChange(font.value)}
+                  >
+                    <Text
+                      style={[
+                        styles.modalOptionText,
+                        { color: textColor, fontFamily: Fonts.sans },
+                        uiFont === font.value && { color: colors.textInteractive },
+                      ]}
+                    >
+                      {font.label}
+                    </Text>
+                    {uiFont === font.value && (
+                      <IconSymbol name="checkmark" size={20} color={colors.textInteractive} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                style={[styles.modalCancel, { borderTopColor: colors.border }]}
+                onPress={() => setShowUIFontPicker(false)}
+              >
+                <Text
+                  style={[
+                    styles.modalCancelText,
+                    { color: colors.textInteractive, fontFamily: Fonts.sans },
+                  ]}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Code Font Picker Modal */}
+        <Modal
+          visible={showCodeFontPicker}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowCodeFontPicker(false)}
+        >
+          <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
+            <View style={[styles.modalContent, { backgroundColor: cardBackground }]}>
+              <Text style={[styles.modalTitle, { color: textColor, fontFamily: Fonts.sans }]}>
+                Select Code Font
+              </Text>
+              <ScrollView style={styles.themeList}>
+                {MONOSPACE_FONTS.map(font => (
+                  <TouchableOpacity
+                    key={font.value}
+                    style={[
+                      styles.modalOption,
+                      codeFont === font.value && { backgroundColor: colors.surfaceInteractive },
+                    ]}
+                    onPress={() => handleCodeFontChange(font.value)}
+                  >
+                    <Text
+                      style={[
+                        styles.modalOptionText,
+                        { color: textColor, fontFamily: Fonts.sans },
+                        codeFont === font.value && { color: colors.textInteractive },
+                      ]}
+                    >
+                      {font.label}
+                    </Text>
+                    {codeFont === font.value && (
+                      <IconSymbol name="checkmark" size={20} color={colors.textInteractive} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TouchableOpacity
+                style={[styles.modalCancel, { borderTopColor: colors.border }]}
+                onPress={() => setShowCodeFontPicker(false)}
+              >
+                <Text
+                  style={[
+                    styles.modalCancelText,
+                    { color: colors.textInteractive, fontFamily: Fonts.sans },
+                  ]}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
         {/* Notifications Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
@@ -390,6 +581,20 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     marginHorizontal: 16,
+  },
+  previewContainer: {
+    padding: 16,
+  },
+  previewLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    opacity: 0.7,
+  },
+  previewBox: {
+    padding: 12,
+    borderRadius: 8,
   },
   version: {
     fontSize: 14,
