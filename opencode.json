@@ -16,6 +16,11 @@
       "mode": "subagent",
       "description": "Commits work, pushes to feature branch, and creates a pull request that closes the related issue",
       "prompt": "{file:.opencode/agents/pr-creator.md}"
+    },
+    "release": {
+      "mode": "subagent",
+      "description": "Handles the complete release process - checks, version bump, commit, tag, and push",
+      "prompt": "{file:.opencode/agents/release.md}"
     }
   }
 }
