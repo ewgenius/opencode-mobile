@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     width: 280,
   },
   serverSection: {
-    padding: 16,
+    padding: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   serverSelector: {
@@ -269,11 +269,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
+    padding: 10,
     borderRadius: 0,
   },
   addServerButton: {
-    padding: 12,
+    padding: 10,
     borderRadius: 0,
   },
   serverName: {
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   },
   projectList: {
     flex: 1,
-    padding: 16,
+    padding: 12,
   },
   sectionTitle: {
     fontSize: 12,
@@ -344,11 +344,11 @@ const styles = StyleSheet.create({
   projectItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
     paddingHorizontal: 8,
     borderRadius: 0,
-    marginBottom: 4,
-    gap: 12,
+    marginBottom: 2,
+    gap: 10,
   },
   projectName: {
     fontSize: 15,

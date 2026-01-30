@@ -53,27 +53,27 @@ export function InputPane({
     backgroundColor: colors.background,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    padding: 12,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+    padding: 8,
+    paddingBottom: Platform.OS === 'ios' ? 16 : 8,
   };
 
   const inputContainerStyle: ViewStyle = {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 8,
+    gap: 6,
   };
 
   const inputStyle: TextStyle = {
     fontFamily: uiFont,
     flex: 1,
-    minHeight: 40,
-    maxHeight: 120,
+    minHeight: 36,
+    maxHeight: 100,
     backgroundColor: colors.inputBackground,
     borderRadius: 0,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    lineHeight: 22,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 15,
+    lineHeight: 20,
     color: colors.text,
     borderWidth: 1,
     borderColor: colors.border,
@@ -91,8 +91,8 @@ export function InputPane({
 
   const selectorsContainerStyle: ViewStyle = {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
+    gap: 4,
+    marginBottom: 6,
   };
 
   const selectorStyle: ViewStyle = {
