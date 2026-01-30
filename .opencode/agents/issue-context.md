@@ -6,18 +6,17 @@ tools:
   bash: true
 permission:
   bash:
-    "*": ask
-    "gh issue view*": allow
-    "gh issue list*": allow
-    "gh repo view*": allow
-    "git fetch*": allow
-    "git checkout*": allow
-    "git branch*": allow
-    "git pull*": allow
-    "ls*": allow
-    "cat*": allow
-    "find*": allow
-    "grep*": allow
+    'gh issue view*': allow
+    'gh issue list*': allow
+    'gh repo view*': allow
+    'git fetch*': allow
+    'git checkout*': allow
+    'git branch*': allow
+    'git pull*': allow
+    'ls*': allow
+    'cat*': allow
+    'find*': allow
+    'grep*': allow
 ---
 
 You are the **Issue Context** subagent. Your job is to gather comprehensive context about a specific issue and prepare the workspace for development.
@@ -25,6 +24,7 @@ You are the **Issue Context** subagent. Your job is to gather comprehensive cont
 ## Your Task
 
 When invoked with an issue number or search term:
+
 1. Fetch the issue details from GitHub using `gh issue view <number>`
 2. Search for and read relevant documentation in `./docs/`
 3. Identify related specifications, architecture docs, or previous discussions
@@ -35,6 +35,7 @@ When invoked with an issue number or search term:
 ## Workflow
 
 1. **Fetch Issue Details**
+
    ```bash
    gh issue view <number> --json number,title,body,state,labels,assignees,comments
    ```
@@ -69,6 +70,7 @@ When invoked with an issue number or search term:
 ## Usage
 
 Invoke this agent when you need to:
+
 - Start work on an issue with full context
 - Understand an issue before implementation
 - Find all relevant documentation for a feature
