@@ -69,7 +69,7 @@ export function InputPane({
     minHeight: 40,
     maxHeight: 120,
     backgroundColor: colors.inputBackground,
-    borderRadius: 20,
+    borderRadius: 0,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 16,
@@ -82,7 +82,7 @@ export function InputPane({
   const sendButtonStyle = (isEnabled: boolean): ViewStyle => ({
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 0,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: isEnabled ? colors.surfaceBrand : colors.inputBackgroundDisabled,

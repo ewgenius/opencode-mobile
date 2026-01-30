@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   },
   serverInfoCard: {
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 0,
     borderWidth: 1,
     marginBottom: 24,
     gap: 12,

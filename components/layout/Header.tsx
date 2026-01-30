@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 8,
-    borderRadius: 8,
+    borderRadius: 0,
   },
   title: {
     fontSize: 17,

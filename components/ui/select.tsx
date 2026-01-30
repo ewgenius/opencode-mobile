@@ -85,8 +85,7 @@ export function Select({
     backgroundColor: disabled ? colors.inputBackgroundDisabled : colors.inputBackground,
     borderWidth: 1,
     borderColor: error ? colors.borderError : colors.border,
-    borderRadius: 8,
-    borderCurve: 'continuous',
+    borderRadius: 0,
     height: sizeConfig.height,
     paddingHorizontal: sizeConfig.padding,
     opacity: disabled ? 0.6 : 1,
@@ -114,8 +113,7 @@ export function Select({
 
   const modalContentStyle: ViewStyle = {
     backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderCurve: 'continuous',
+    borderRadius: 0,
     width: '100%',
     maxHeight: 300,
     shadowColor: '#000',

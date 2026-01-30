@@ -197,7 +197,7 @@ export function CodeBlock({ code, language, isUser = false }: CodeBlockProps) {
 
   const containerStyle: ViewStyle = {
     backgroundColor: isUser ? 'rgba(0,0,0,0.15)' : colors.backgroundTertiary,
-    borderRadius: 8,
+    borderRadius: 0,
     marginVertical: 8,
     overflow: 'hidden',
   };
@@ -225,7 +225,7 @@ export function CodeBlock({ code, language, isUser = false }: CodeBlockProps) {
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 0,
     backgroundColor: copied
       ? isUser
         ? 'rgba(0,0,0,0.2)'
