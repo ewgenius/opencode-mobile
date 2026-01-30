@@ -23,22 +23,21 @@ opencode-mobile is a cross-platform mobile client for opencode servers, built wi
 
 ```
 app/
-├── _layout.tsx                 # Root layout with providers
-├── (auth)/                     # Auth group (no sidebar)
-│   └── connect-server.tsx      # Server connection screen
-├── (app)/                      # Main app group (with sidebar)
-│   ├── _layout.tsx             # App shell with sidebar
-│   ├── index.tsx               # Project view (default redirect)
-│   ├── project/
-│   │   └── [id].tsx            # Project detail view
-│   ├── session/
-│   │   └── [id].tsx            # Session chat view
-│   └── preferences.tsx         # Settings view
+├── _layout.tsx                 # Root layout with sidebar
+├── index.tsx                   # Default route (connect-server or redirect)
+├── connect-server.tsx          # Add/connect server view (modal or main)
+├── server-settings.tsx         # Edit server settings
+├── project/
+│   └── [id].tsx                # Project detail view
+├── session/
+│   └── [id].tsx                # Session chat view
+├── preferences.tsx             # App preferences/settings
 ├── components/                 # Shared components
 │   ├── ui/                     # Primitive UI components
 │   ├── sidebar/                # Sidebar components
 │   ├── chat/                   # Chat UI components
-│   └── project/                # Project view components
+│   ├── project/                # Project view components
+│   └── server/                 # Server connection components
 ├── hooks/                      # Custom React hooks
 ├── stores/                     # Zustand stores (persisted to MMKV)
 ├── services/                   # API client services
@@ -159,29 +158,28 @@ const useStore = create(
 
 ## Navigation Structure
 
-### Route Groups
+### Routes
 
 ```
 app/
-├── _layout.tsx              # Root: ThemeProvider + SafeArea
-├── (auth)/                  # No sidebar, full-screen
-│   ├── _layout.tsx          # Auth layout
-│   └── connect-server.tsx   # Server connection
-└── (app)/                   # With sidebar
-    ├── _layout.tsx          # Shell: Sidebar + Main content
-    ├── index.tsx            # Redirect to last project
-    ├── project/
-    │   └── [id].tsx         # Project sessions list
-    ├── session/
-    │   └── [id].tsx         # Chat view
-    └── preferences.tsx      # Settings
+├── _layout.tsx              # Root: ThemeProvider + SafeArea + Sidebar
+├── index.tsx                # Default: connect-server or redirect to project
+├── connect-server.tsx       # Add new server (first launch or from sidebar)
+├── server-settings.tsx      # Edit existing server settings
+├── project/
+│   └── [id].tsx             # Project sessions list
+├── session/
+│   └── [id].tsx             # Chat view
+└── preferences.tsx          # App settings
 ```
 
 ### Navigation Flow
 
-1. **First Launch**: `(auth)/connect-server`
-2. **Subsequent**: `(app)/project/[lastProjectId]` (from preferences)
-3. **Deep Linking**: `opencodemobile://session/[id]` opens directly to session
+1. **First Launch**: `index.tsx` detects no servers → renders `connect-server` with welcome instructions
+2. **Subsequent**: `index.tsx` redirects to `project/[lastProjectId]` (from preferences)
+3. **Add Server**: Sidebar [+] button → `connect-server` (without welcome text)
+4. **Edit Server**: Server dropdown → Settings → `server-settings`
+5. **Deep Linking**: `opencodemobile://session/[id]` opens directly to session
 
 ## UI/UX Architecture
 
@@ -894,7 +892,7 @@ const { resolveTheme } = require('../opencode/packages/ui/src/theme/resolve');
 - [ ] Create base UI components (Button, Input, Select) using theme colors
 
 ### Phase 2: Core Features (Week 2)
-- [ ] Server connection flow (auth group)
+- [ ] Server connection views (connect-server, server-settings)
 - [ ] Sidebar implementation with server/project navigation
 - [ ] API service integration with @opencode-ai/sdk
 - [ ] Preferences screen with theme selector (all 18 themes)
