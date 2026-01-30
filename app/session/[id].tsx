@@ -1,178 +1,185 @@
-import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { Fonts } from '@/constants/theme';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { MainContent } from '@/components/layout';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SymbolView } from 'expo-symbols';
+import { useTheme } from '@/components/ThemeProvider';
+import { useFonts } from '@/hooks/useFonts';
+import { useApi } from '@/hooks/useApi';
+import { useMessages, useSendMessage } from '@/hooks';
+import { MainContent } from '@/components/layout';
+import { MessageList, InputPane } from '@/components/chat';
+import { SelectOption } from '@/components/ui/select';
 
-// Placeholder data - will be replaced with actual store data
-const PLACEHOLDER_MESSAGES = [
-  { id: '1', role: 'user', content: 'Hello! Can you help me with a coding task?' },
-  {
-    id: '2',
-    role: 'assistant',
-    content: "Of course! I'd be happy to help. What do you need assistance with?",
-  },
-  {
-    id: '3',
-    role: 'user',
-    content: 'I need to refactor some React code to use hooks instead of class components.',
-  },
+// Placeholder agent and model options - these would come from API in production
+const AGENT_OPTIONS: SelectOption[] = [
+  { value: 'opencode', label: 'OpenCode' },
+  { value: 'coder', label: 'Coder' },
+  { value: 'assistant', label: 'Assistant' },
+];
+
+const MODEL_OPTIONS: SelectOption[] = [
+  { value: 'claude-3-opus', label: 'Claude 3 Opus' },
+  { value: 'claude-3-sonnet', label: 'Claude 3 Sonnet' },
+  { value: 'gpt-4', label: 'GPT-4' },
+  { value: 'gpt-3.5-turbo', label: 'GPT-3.5' },
 ];
 
 export default function SessionChat() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const [inputText, setInputText] = useState('');
-  const [messages, setMessages] = useState(PLACEHOLDER_MESSAGES);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const { id: sessionId } = useLocalSearchParams<{ id: string }>();
+  const { colors } = useTheme();
+  const { ui } = useFonts();
+  const { isConnected } = useApi();
   const insets = useSafeAreaInsets();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const iconColor = useThemeColor({}, 'icon');
-  const userMessageBg = tintColor;
-  const assistantMessageBg = useThemeColor({}, 'background');
+  // Fetch messages
+  const { data: messages = [], isLoading, refetch } = useMessages(sessionId || null);
 
-  // TODO: Load session data from store based on id
-  const sessionName = `Session ${id}`;
+  // Send message mutation
+  const sendMessageMutation = useSendMessage();
 
-  const handleSend = () => {
-    if (!inputText.trim()) return;
+  // Handle refresh
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  }, [refetch]);
 
-    const newMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: inputText.trim(),
-    };
+  // Handle send message
+  const handleSend = useCallback(
+    async (content: string, agent?: string, model?: { providerID: string; modelID: string }) => {
+      if (!sessionId || !isConnected) return;
 
-    setMessages([...messages, newMessage]);
-    setInputText('');
+      setIsSending(true);
+      try {
+        await sendMessageMutation.mutateAsync({
+          sessionId,
+          content,
+          agent,
+          model,
+        });
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [sessionId, isConnected, sendMessageMutation]
+  );
 
-    // TODO: Send message to server and get response
-    // For now, simulate a response
-    setTimeout(() => {
-      const assistantResponse = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content:
-          'This is a placeholder response. The actual chat functionality will be implemented in a future update.',
-      };
-      setMessages(prev => [...prev, assistantResponse]);
-    }, 1000);
+  // Handle back navigation
+  const handleBack = useCallback(() => {
+    router.back();
+  }, []);
+
+  // Header styles
+  const headerStyle = {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 12,
+    paddingTop: insets.top,
+    height: 56 + insets.top,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   };
 
-  const handleBack = () => {
-    router.back();
+  const headerTitleStyle = {
+    ...ui,
+    fontSize: 17,
+    fontWeight: '600' as const,
+    color: colors.text,
+    flex: 1,
+    textAlign: 'center' as const,
+  };
+
+  const backButtonStyle = {
+    padding: 8,
+    width: 44,
+  };
+
+  const moreButtonStyle = {
+    padding: 8,
+    width: 44,
+    alignItems: 'flex-end' as const,
+  };
+
+  // Offline banner styles
+  const offlineBannerStyle = {
+    backgroundColor: colors.surfaceWarning,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+  };
+
+  const offlineTextStyle = {
+    ...ui,
+    fontSize: 14,
+    color: colors.textOnWarning,
+    fontWeight: '500' as const,
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor }]}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      {/* Custom Header */}
-      <View style={[styles.header, { paddingTop: insets.top, backgroundColor }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <IconSymbol name="chevron.left" size={28} color={textColor} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
+      <View style={headerStyle}>
+        <TouchableOpacity onPress={handleBack} style={backButtonStyle}>
+          <SymbolView name="chevron.left" size={28} tintColor={colors.text} />
         </TouchableOpacity>
-        <Text
-          style={[styles.headerTitle, { color: textColor, fontFamily: Fonts.sans }]}
-          numberOfLines={1}
-        >
-          {sessionName}
+        <Text style={headerTitleStyle} numberOfLines={1}>
+          Session
         </Text>
-        <TouchableOpacity style={styles.moreButton}>
-          <IconSymbol name="ellipsis" size={24} color={iconColor} />
+        <TouchableOpacity style={moreButtonStyle}>
+          <SymbolView name="ellipsis" size={24} tintColor={colors.icon} />
         </TouchableOpacity>
       </View>
 
+      {/* Offline Banner */}
+      {!isConnected && (
+        <View style={offlineBannerStyle}>
+          <SymbolView
+            name="wifi.slash"
+            size={16}
+            tintColor={colors.textOnWarning}
+            weight="medium"
+          />
+          <Text style={offlineTextStyle}>Offline - Connect to send messages</Text>
+        </View>
+      )}
+
+      {/* Main Content */}
       <MainContent>
         <View style={styles.content}>
           {/* Messages List */}
-          <ScrollView
-            ref={scrollViewRef}
-            style={styles.messagesContainer}
-            contentContainerStyle={styles.messagesContent}
-            onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-          >
-            {messages.map(message => (
-              <View
-                key={message.id}
-                style={[
-                  styles.messageRow,
-                  message.role === 'user' ? styles.userMessageRow : styles.assistantMessageRow,
-                ]}
-              >
-                <View
-                  style={[
-                    styles.messageBubble,
-                    message.role === 'user'
-                      ? [styles.userBubble, { backgroundColor: userMessageBg }]
-                      : [
-                          styles.assistantBubble,
-                          { backgroundColor: assistantMessageBg, borderColor: 'rgba(0,0,0,0.1)' },
-                        ],
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.messageText,
-                      {
-                        color: message.role === 'user' ? '#fff' : textColor,
-                        fontFamily: Fonts.sans,
-                      },
-                    ]}
-                  >
-                    {message.content}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
+          <MessageList
+            messages={messages}
+            isLoading={isLoading}
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
+          />
 
           {/* Input Area */}
-          <View
-            style={[styles.inputContainer, { backgroundColor, borderTopColor: 'rgba(0,0,0,0.1)' }]}
-          >
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: 'rgba(0,0,0,0.05)',
-                  color: textColor,
-                  fontFamily: Fonts.sans,
-                },
-              ]}
-              placeholder="Type a message..."
-              placeholderTextColor={iconColor}
-              value={inputText}
-              onChangeText={setInputText}
-              multiline
-            />
-            <TouchableOpacity
-              style={[styles.sendButton, { backgroundColor: tintColor }]}
-              onPress={handleSend}
-              disabled={!inputText.trim()}
-            >
-              <IconSymbol name="arrow.up" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
+          <InputPane
+            onSend={handleSend}
+            isConnected={isConnected}
+            agents={AGENT_OPTIONS}
+            models={MODEL_OPTIONS}
+            disabled={isSending}
+          />
         </View>
       </MainContent>
-    </KeyboardAvoidingView>
+
+      {/* Loading Overlay for Send */}
+      {isSending && (
+        <View style={styles.sendingOverlay}>
+          <ActivityIndicator size="large" color={colors.icon} />
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -180,87 +187,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    height: 56,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
-  },
-  backButton: {
-    padding: 8,
-    width: 44,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'center',
-  },
-  moreButton: {
-    padding: 8,
-    width: 44,
-    alignItems: 'flex-end',
-  },
   content: {
     flex: 1,
   },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesContent: {
-    padding: 16,
-    gap: 12,
-  },
-  messageRow: {
-    flexDirection: 'row',
-    width: '100%',
-  },
-  userMessageRow: {
-    justifyContent: 'flex-end',
-  },
-  assistantMessageRow: {
-    justifyContent: 'flex-start',
-  },
-  messageBubble: {
-    maxWidth: '80%',
-    padding: 12,
-    borderRadius: 18,
-  },
-  userBubble: {
-    borderBottomRightRadius: 4,
-  },
-  assistantBubble: {
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-  },
-  messageText: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    padding: 12,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    gap: 8,
-  },
-  input: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 100,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  sendingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
