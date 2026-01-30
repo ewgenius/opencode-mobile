@@ -6,25 +6,53 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { createMMKV } from 'react-native-mmkv';
+import { createMMKV, type MMKV } from 'react-native-mmkv';
 import type { ThemeMode } from '@/themes/types';
 
-// Create MMKV instance
-const storage = createMMKV({
-  id: 'preferences-storage',
-});
+// Lazy initialization of MMKV instance to avoid crash on app launch
+let storageInstance: MMKV | null = null;
 
-// Custom storage adapter for Zustand
+function getStorage(): MMKV {
+  if (!storageInstance) {
+    try {
+      storageInstance = createMMKV({
+        id: 'preferences-storage',
+      });
+    } catch (error) {
+      console.error('Failed to initialize MMKV storage:', error);
+      throw error;
+    }
+  }
+  return storageInstance;
+}
+
+// Custom storage adapter for Zustand with lazy initialization
 const mmkvStorage = {
   getItem: (name: string): string | null => {
-    const value = storage.getString(name);
-    return value ?? null;
+    try {
+      const storage = getStorage();
+      const value = storage.getString(name);
+      return value ?? null;
+    } catch (error) {
+      console.error('MMKV getItem error:', error);
+      return null;
+    }
   },
   setItem: (name: string, value: string): void => {
-    storage.set(name, value);
+    try {
+      const storage = getStorage();
+      storage.set(name, value);
+    } catch (error) {
+      console.error('MMKV setItem error:', error);
+    }
   },
   removeItem: (name: string): void => {
-    storage.remove(name);
+    try {
+      const storage = getStorage();
+      storage.remove(name);
+    } catch (error) {
+      console.error('MMKV removeItem error:', error);
+    }
   },
 };
 
@@ -62,15 +90,15 @@ const initialState = {
 
 export const usePreferencesStore = create<PreferencesState>()(
   persist(
-    (set) => ({
+    set => ({
       ...initialState,
 
-      setThemeMode: (mode) => set({ themeMode: mode }),
-      setColorScheme: (schemeId) => set({ colorSchemeId: schemeId }),
-      setUIFont: (font) => set({ uiFont: font }),
-      setCodeFont: (font) => set({ codeFont: font }),
-      setServerHost: (host) => set({ serverHost: host }),
-      setServerPort: (port) => set({ serverPort: port }),
+      setThemeMode: mode => set({ themeMode: mode }),
+      setColorScheme: schemeId => set({ colorSchemeId: schemeId }),
+      setUIFont: font => set({ uiFont: font }),
+      setCodeFont: font => set({ codeFont: font }),
+      setServerHost: host => set({ serverHost: host }),
+      setServerPort: port => set({ serverPort: port }),
 
       resetPreferences: () => set(initialState),
     }),
@@ -82,14 +110,9 @@ export const usePreferencesStore = create<PreferencesState>()(
 );
 
 // Selector hooks for better performance
-export const useThemeMode = () =>
-  usePreferencesStore((state) => state.themeMode);
-export const useColorSchemeId = () =>
-  usePreferencesStore((state) => state.colorSchemeId);
-export const useUIFont = () => usePreferencesStore((state) => state.uiFont);
-export const useCodeFont = () =>
-  usePreferencesStore((state) => state.codeFont);
-export const useServerHost = () =>
-  usePreferencesStore((state) => state.serverHost);
-export const useServerPort = () =>
-  usePreferencesStore((state) => state.serverPort);
+export const useThemeMode = () => usePreferencesStore(state => state.themeMode);
+export const useColorSchemeId = () => usePreferencesStore(state => state.colorSchemeId);
+export const useUIFont = () => usePreferencesStore(state => state.uiFont);
+export const useCodeFont = () => usePreferencesStore(state => state.codeFont);
+export const useServerHost = () => usePreferencesStore(state => state.serverHost);
+export const useServerPort = () => usePreferencesStore(state => state.serverPort);
