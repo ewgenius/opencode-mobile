@@ -5,6 +5,27 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/components/layout": [
+        "./components/layout/index.ts"
+      ],
+      "@/stores/*": [
+        "./stores/*"
+      ],
+      "@/hooks/*": [
+        "./hooks/*"
+      ],
+      "@/constants/*": [
+        "./constants/*"
+      ],
+      "@/assets/*": [
+        "./assets/*"
+      ],
+      "@/utils/*": [
+        "./utils/*"
       ]
     }
   },
