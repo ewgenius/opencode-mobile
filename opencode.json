@@ -7,6 +7,11 @@
       "description": "Plans roadmap, writes specifications, and manages issues using GitHub project #6",
       "prompt": "{file:.opencode/agents/manager.md}"
     },
+    "autopilot": {
+      "mode": "primary",
+      "description": "Autonomous project orchestrator that processes issues from ready state through to merge",
+      "prompt": "{file:.opencode/agents/autopilot.md}"
+    },
     "issue-context": {
       "mode": "subagent",
       "description": "Gathers comprehensive context for a specific issue and sets up a feature branch for work",
