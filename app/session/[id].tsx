@@ -161,7 +161,6 @@ export default function SessionChat() {
               value={inputText}
               onChangeText={setInputText}
               multiline
-              maxHeight={100}
             />
             <TouchableOpacity
               style={[styles.sendButton, { backgroundColor: tintColor }]}
