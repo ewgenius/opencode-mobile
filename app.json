@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "opencodemobile",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
       "buildNumber": "3"
@@ -29,6 +29,7 @@
     },
     "plugins": [
       "expo-router",
+      "react-native-reanimated/plugin",
       [
         "expo-splash-screen",
         {
