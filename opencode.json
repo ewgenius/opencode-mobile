@@ -21,6 +21,11 @@
       "mode": "subagent",
       "description": "Handles the complete release process - checks, version bump, commit, tag, and push",
       "prompt": "{file:.opencode/agents/release.md}"
+    },
+    "review": {
+      "mode": "subagent",
+      "description": "Reviews, approves, and merges pull requests using GitHub CLI",
+      "prompt": "{file:.opencode/agents/review.md}"
     }
   }
 }
