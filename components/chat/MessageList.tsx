@@ -10,10 +10,11 @@ import {
 import { FlashList, type ListRenderItem, type FlashListRef } from '@shopify/flash-list';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
-import { MessageItem, type Message } from './MessageItem';
+import { MessageItem } from './MessageItem';
+import type { MessageWithParts } from '@/types/messageParts';
 
 interface MessageListProps {
-  messages: Message[];
+  messages: MessageWithParts[];
   isLoading: boolean;
   onRefresh?: () => void;
   isRefreshing?: boolean;
@@ -27,14 +28,14 @@ export function MessageList({
 }: MessageListProps) {
   const { colors } = useTheme();
   const { uiFont } = useFonts();
-  const listRef = useRef<FlashListRef<Message> | null>(null);
+  const listRef = useRef<FlashListRef<MessageWithParts> | null>(null);
 
-  const renderItem: ListRenderItem<Message> = useCallback(
+  const renderItem: ListRenderItem<MessageWithParts> = useCallback(
     ({ item }) => <MessageItem message={item} />,
     []
   );
 
-  const keyExtractor = (item: Message) => item.id;
+  const keyExtractor = (item: MessageWithParts) => item.id;
 
   const containerStyle: ViewStyle = {
     flex: 1,
