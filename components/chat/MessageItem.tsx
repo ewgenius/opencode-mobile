@@ -3,6 +3,7 @@ import { View, Text, type ViewStyle, type TextStyle } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
+import { CodeBlock } from './CodeBlock';
 
 export interface Message {
   id: string;
@@ -163,10 +164,31 @@ export function MessageItem({ message }: MessageItemProps) {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const renderers = useMemo(
+    () => ({
+      fence: (node: any) => {
+        const { content, info } = node.sourceInfo || {};
+        return (
+          <CodeBlock
+            code={node.content || content || ''}
+            language={info || node.language || ''}
+            isUser={isUser}
+          />
+        );
+      },
+      code_block: (node: any) => {
+        return <CodeBlock code={node.content || ''} language="" isUser={isUser} />;
+      },
+    }),
+    [isUser]
+  );
+
   return (
     <View style={containerStyle}>
       <View style={bubbleStyle}>
-        <Markdown style={markdownStyles}>{message.content}</Markdown>
+        <Markdown style={markdownStyles} rules={renderers}>
+          {message.content}
+        </Markdown>
         <Text style={timestampStyle}>{formatTimestamp(message.timestamp)}</Text>
       </View>
     </View>
