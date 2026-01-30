@@ -1,43 +1,45 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { Fonts } from '@/constants/theme';
-
-// Placeholder: Check if servers exist
-// In the future, this will check the server store
-const hasServers = false;
-const lastProjectId = null;
+import { useTheme } from '@/components/ThemeProvider';
+import { useFonts } from '@/hooks/useFonts';
+import { useServers, useActiveServerId } from '@/stores/serverStore';
 
 export default function Index() {
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
+  const servers = useServers();
+  const activeServerId = useActiveServerId();
+  const { colors } = useTheme();
+  const { ui } = useFonts();
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     // Defer navigation to ensure navigator is mounted
     const timeout = setTimeout(() => {
       // Check if we have servers configured
-      if (!hasServers) {
-        // No servers - show connect server screen
+      if (servers.length === 0) {
+        // No servers - show connect server screen for first launch
         router.replace('/connect-server');
-      } else if (lastProjectId) {
-        // Have servers and last project - redirect to it
-        router.replace(`/project/${lastProjectId}`);
-      } else {
-        // Have servers but no last project - redirect to first project
+      } else if (activeServerId) {
+        // Have servers and active server - could redirect to server selection or project
+        // For now, redirect to a placeholder project or server screen
         router.replace('/project/1');
+      } else {
+        // Have servers but no active server - let user select one
+        router.replace('/select-server');
       }
-    }, 0);
+      setIsChecking(false);
+    }, 100);
 
     return () => clearTimeout(timeout);
-  }, []);
+  }, [servers, activeServerId]);
 
-  // Show loading state while redirecting
+  // Show loading state while checking and redirecting
   return (
-    <View style={[styles.container, { backgroundColor }]}>
-      <ActivityIndicator size="large" color={tintColor} />
-      <Text style={[styles.text, { color: textColor, fontFamily: Fonts.sans }]}>Loading...</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size="large" color={colors.surfaceBrand} />
+      <Text style={[styles.text, { color: colors.text, ...ui }] as any}>
+        {isChecking ? 'Loading...' : 'Redirecting...'}
+      </Text>
     </View>
   );
 }
