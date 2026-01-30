@@ -6,6 +6,11 @@
       "mode": "primary",
       "description": "Plans roadmap, writes specifications, and manages issues using GitHub project #6",
       "prompt": "{file:.opencode/agents/manager.md}"
+    },
+    "issue-context": {
+      "mode": "subagent",
+      "description": "Gathers comprehensive context for a specific issue by fetching details from GitHub and relevant documentation",
+      "prompt": "{file:.opencode/agents/issue-context.md}"
     }
   }
 }
