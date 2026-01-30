@@ -45,23 +45,23 @@ export function MessageList({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    minHeight: 200,
+    padding: 16,
+    minHeight: 150,
   };
 
   const emptyTitleStyle: TextStyle = {
     fontFamily: uiFont,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.textSecondary,
-    marginTop: 16,
+    marginTop: 12,
   };
 
   const emptySubtitleStyle: TextStyle = {
     fontFamily: uiFont,
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textTertiary,
-    marginTop: 8,
+    marginTop: 4,
     textAlign: 'center',
   };
 
@@ -74,9 +74,9 @@ export function MessageList({
 
   const loadingTextStyle: TextStyle = {
     fontFamily: uiFont,
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textSecondary,
-    marginTop: 16,
+    marginTop: 12,
   };
 
   if (isLoading) {
@@ -125,7 +125,7 @@ export function MessageList({
 
 const styles = StyleSheet.create({
   contentContainer: {
-    padding: 16,
-    paddingBottom: 32,
+    paddingVertical: 8,
+    paddingBottom: 16,
   },
 });
