@@ -25,13 +25,17 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
+      # NOTE: Bun cache disabled temporarily - may be corrupted and causing expo prebuild errors
+      # - name: Cache dependencies
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.bun/install/cache
+      #     key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-bun-
+
+      - name: Clear bun cache
+        run: bun pm cache rm || true
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -79,13 +83,18 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
+      # NOTE: Bun cache disabled temporarily - may be corrupted and causing expo prebuild errors
+      # See: https://stackoverflow.com/questions/79653412/
+      # - name: Cache dependencies
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.bun/install/cache
+      #     key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-bun-
+
+      - name: Clear bun cache
+        run: bun pm cache rm || true
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
