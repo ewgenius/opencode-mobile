@@ -9,6 +9,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   quality:
     name: Quality Checks
@@ -77,42 +80,50 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Cache Expo prebuild
+        uses: actions/cache@v4
+        with:
+          path: |
+            android
+            .expo
+          key: ${{ runner.os }}-expo-android-${{ hashFiles('app.json', 'package.json', 'bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-expo-android-
+
       - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
+            ~/.gradle/configuration-cache
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
       - name: Generate native Android project
-        run: bunx expo prebuild --platform android --clean
+        run: bunx expo prebuild --platform android
 
       - name: Build Android APK
         working-directory: android
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --build-cache --parallel --daemon
+
+      - name: Rename APK with version
+        run: |
+          mv android/app/build/outputs/apk/release/app-release.apk \
+             android/app/build/outputs/apk/release/opencode-mobile-${{ github.ref_name }}.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: android/app/build/outputs/apk/release/opencode-mobile-${{ github.ref_name }}.apk
           retention-days: 5
 
-      - name: Upload APK to GitHub Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/release/app-release.apk
-          body: |
-            ## Android APK
-            
-            Attached: `app-release.apk`
-            
-            Built from tag: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
+          files: android/app/build/outputs/apk/release/opencode-mobile-${{ github.ref_name }}.apk
+          generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
