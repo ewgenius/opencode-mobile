@@ -2,7 +2,7 @@
 
 /**
  * Theme Generation Script
- * 
+ *
  * This script resolves themes from opencode desktop themes at build time
  * and outputs them to assets/themes/ for use by the mobile app.
  */
@@ -14,8 +14,32 @@ const path = require('path');
 const { oklch, formatHex, parse } = require('culori');
 
 // Paths
-const OPENCODE_THEMES_DIR = path.join(__dirname, '..', '..', 'opencode', 'packages', 'ui', 'src', 'theme', 'themes');
+const OPENCODE_THEMES_DIR = path.join(
+  __dirname,
+  '..',
+  '..',
+  'opencode',
+  'packages',
+  'ui',
+  'src',
+  'theme',
+  'themes'
+);
+const COLOR_SCALES_PATH = path.join(
+  __dirname,
+  '..',
+  '..',
+  'opencode',
+  'packages',
+  'ui',
+  'src',
+  'styles',
+  'colors.css'
+);
 const OUTPUT_DIR = path.join(__dirname, '..', 'assets', 'themes');
+
+// Cache for parsed color scales
+let cachedColorScales = null;
 
 // Theme list (18 themes)
 const THEMES = [
@@ -108,7 +132,7 @@ function generateScale(seedHex, isDark) {
 
   for (let i = 0; i < 12; i++) {
     const t = i / 11;
-    
+
     // Lightness curve
     let l;
     if (isDark) {
@@ -116,13 +140,13 @@ function generateScale(seedHex, isDark) {
     } else {
       l = 0.98 - t * 0.88;
     }
-    
+
     // Chroma curve - higher in middle, lower at extremes
     let c = seed.c;
     if (t < 0.2 || t > 0.8) {
       c = seed.c * 0.6;
     }
-    
+
     scale.push(oklchToHex({ l, c, h: seed.h }));
   }
 
@@ -141,7 +165,7 @@ function generateNeutralScale(seedHex, isDark) {
 
   for (let i = 0; i < 12; i++) {
     const t = i / 11;
-    
+
     // Lightness curve
     let l;
     if (isDark) {
@@ -149,10 +173,10 @@ function generateNeutralScale(seedHex, isDark) {
     } else {
       l = 0.98 - t * 0.9;
     }
-    
+
     // Very low chroma for neutral
     const c = seed.c * 0.1;
-    
+
     scale.push(oklchToHex({ l, c, h: seed.h }));
   }
 
@@ -189,9 +213,41 @@ function generateNeutralAlphaScale(neutralScale, isDark) {
 function withAlpha(hex, alpha) {
   const color = parse(hex);
   if (!color) return hex;
-  
+
   color.alpha = alpha;
   return formatHex(color);
+}
+
+/**
+ * Parse color scales from colors.css
+ * @returns {Record<string, string>}
+ */
+function parseColorScales() {
+  if (cachedColorScales) {
+    return cachedColorScales;
+  }
+
+  const colorScales = {};
+
+  try {
+    const cssContent = fs.readFileSync(COLOR_SCALES_PATH, 'utf-8');
+
+    // Match CSS custom properties: --name: #value;
+    const regex = /(--[\w-]+):\s*([^;]+);/g;
+    let match;
+
+    while ((match = regex.exec(cssContent)) !== null) {
+      const varName = match[1].replace('--', '');
+      const varValue = match[2].trim();
+      colorScales[varName] = varValue;
+    }
+
+    cachedColorScales = colorScales;
+    return colorScales;
+  } catch (error) {
+    console.warn('Warning: Could not parse color scales from colors.css:', error.message);
+    return {};
+  }
 }
 
 /**
@@ -203,7 +259,7 @@ function withAlpha(hex, alpha) {
 function resolveVar(value, tokens) {
   if (typeof value !== 'string') return value;
   if (!value.startsWith('var(--')) return value;
-  
+
   const varName = value.replace('var(--', '').replace(')', '');
   return tokens[varName] || value;
 }
@@ -216,6 +272,9 @@ function resolveVar(value, tokens) {
  */
 function resolveThemeVariant(variant, isDark) {
   const { seeds, overrides = {} } = variant;
+
+  // Load external color scales from colors.css
+  const colorScales = parseColorScales();
 
   const neutral = generateNeutralScale(seeds.neutral, isDark);
   const primary = generateScale(seeds.primary, isDark);
@@ -231,6 +290,9 @@ function resolveThemeVariant(variant, isDark) {
 
   /** @type {Record<string, string>} */
   const tokens = {};
+
+  // Merge color scales first so they can be referenced in overrides
+  Object.assign(tokens, colorScales);
 
   tokens['background-base'] = neutral[0];
   tokens['background-weak'] = neutral[2];
@@ -541,7 +603,7 @@ function mapToMobileTokens(tokens) {
     background: tokens['background-base'],
     backgroundSecondary: tokens['background-weak'],
     backgroundTertiary: tokens['background-strong'],
-    
+
     // Surface
     surface: tokens['surface-base'],
     surfaceHover: tokens['surface-base-hover'],
@@ -557,7 +619,7 @@ function mapToMobileTokens(tokens) {
     surfaceWarning: tokens['surface-warning-base'],
     surfaceError: tokens['surface-critical-base'],
     surfaceInfo: tokens['surface-info-base'],
-    
+
     // Text
     text: tokens['text-base'],
     textSecondary: tokens['text-weak'],
@@ -571,7 +633,7 @@ function mapToMobileTokens(tokens) {
     textOnError: tokens['text-on-critical-base'],
     textOnWarning: tokens['text-on-warning-base'],
     textOnInfo: tokens['text-on-info-base'],
-    
+
     // Border
     border: tokens['border-base'],
     borderHover: tokens['border-hover'],
@@ -582,19 +644,19 @@ function mapToMobileTokens(tokens) {
     borderWarning: tokens['border-warning-base'],
     borderError: tokens['border-critical-base'],
     borderInfo: tokens['border-info-base'],
-    
+
     // Input
     inputBackground: tokens['input-base'],
     inputBackgroundHover: tokens['input-hover'],
     inputBackgroundActive: tokens['input-active'],
     inputBackgroundSelected: tokens['input-selected'],
     inputBackgroundDisabled: tokens['input-disabled'],
-    
+
     // Button
     buttonSecondary: tokens['button-secondary-base'],
     buttonSecondaryHover: tokens['button-secondary-hover'],
     buttonGhostHover: tokens['button-ghost-hover'],
-    
+
     // Icon
     icon: tokens['icon-base'],
     iconHover: tokens['icon-hover'],
@@ -607,7 +669,7 @@ function mapToMobileTokens(tokens) {
     iconWarning: tokens['icon-warning-base'],
     iconError: tokens['icon-critical-base'],
     iconInfo: tokens['icon-info-base'],
-    
+
     // Syntax (for code highlighting)
     syntaxComment: tokens['syntax-comment'],
     syntaxString: tokens['syntax-string'],
@@ -621,7 +683,7 @@ function mapToMobileTokens(tokens) {
     syntaxWarning: tokens['syntax-warning'],
     syntaxError: tokens['syntax-critical'],
     syntaxInfo: tokens['syntax-info'],
-    
+
     // Avatar
     avatarBackgroundPink: tokens['avatar-background-pink'],
     avatarBackgroundMint: tokens['avatar-background-mint'],
@@ -645,11 +707,11 @@ function mapToMobileTokens(tokens) {
  */
 function loadTheme(themeId) {
   const themePath = path.join(OPENCODE_THEMES_DIR, `${themeId}.json`);
-  
+
   if (!fs.existsSync(themePath)) {
     throw new Error(`Theme file not found: ${themePath}`);
   }
-  
+
   const content = fs.readFileSync(themePath, 'utf-8');
   return JSON.parse(content);
 }
@@ -659,25 +721,25 @@ function loadTheme(themeId) {
  */
 function generateThemes() {
   console.log('🎨 Generating mobile themes...\n');
-  
+
   // Ensure output directory exists
   if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   }
-  
+
   // Generate index file with theme metadata
   const themeIndex = {
     themes: [],
     defaultTheme: 'oc-1',
   };
-  
+
   for (const themeId of THEMES) {
     try {
       console.log(`  Processing ${themeId}...`);
-      
+
       const desktopTheme = loadTheme(themeId);
       const resolved = resolveTheme(desktopTheme);
-      
+
       // Map to mobile tokens
       const mobileTheme = {
         id: desktopTheme.id,
@@ -685,28 +747,28 @@ function generateThemes() {
         light: mapToMobileTokens(resolved.light),
         dark: mapToMobileTokens(resolved.dark),
       };
-      
+
       // Write theme file
       const outputPath = path.join(OUTPUT_DIR, `${themeId}.json`);
       fs.writeFileSync(outputPath, JSON.stringify(mobileTheme, null, 2));
-      
+
       // Add to index
       themeIndex.themes.push({
         id: desktopTheme.id,
         name: desktopTheme.name,
       });
-      
+
       console.log(`    ✓ Generated ${themeId}.json`);
     } catch (error) {
       console.error(`    ✗ Failed to process ${themeId}:`, error.message);
     }
   }
-  
+
   // Write index file
   const indexPath = path.join(OUTPUT_DIR, 'index.json');
   fs.writeFileSync(indexPath, JSON.stringify(themeIndex, null, 2));
   console.log(`\n  ✓ Generated index.json`);
-  
+
   console.log(`\n✅ Theme generation complete!`);
   console.log(`   Output: ${OUTPUT_DIR}`);
   console.log(`   Themes: ${themeIndex.themes.length}`);
