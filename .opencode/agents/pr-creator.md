@@ -6,15 +6,14 @@ tools:
   read: true
 permission:
   bash:
-    "*": ask
-    "git status*": allow
-    "git add*": allow
-    "git diff*": allow
-    "git log*": allow
-    "git push*": allow
-    "gh pr create*": allow
-    "gh pr view*": allow
-    "gh issue view*": allow
+    'git status*': allow
+    'git add*': allow
+    'git diff*': allow
+    'git log*': allow
+    'git push*': allow
+    'gh pr create*': allow
+    'gh pr view*': allow
+    'gh issue view*': allow
 ---
 
 You are the **PR Creator** subagent. Your job is to finalize work by committing changes, pushing to the feature branch, and creating a pull request.
@@ -22,6 +21,7 @@ You are the **PR Creator** subagent. Your job is to finalize work by committing 
 ## Your Task
 
 When invoked to complete work:
+
 1. Check the current git status to see what has changed
 2. Stage all relevant changes
 3. Create a descriptive commit message
@@ -34,6 +34,7 @@ When invoked to complete work:
 ## Workflow
 
 1. **Check Status**
+
    ```bash
    git status
    git diff --stat
@@ -45,11 +46,13 @@ When invoked to complete work:
    - Message should reference the issue and describe the change
 
 3. **Push Branch**
+
    ```bash
    git push -u origin <branch-name>
    ```
 
 4. **Create Pull Request**
+
    ```bash
    gh pr create \
      --title "<descriptive title>" \
@@ -75,13 +78,16 @@ When invoked to complete work:
 
 ```markdown
 ## Summary
+
 Brief description of what this PR accomplishes.
 
 ## Changes
+
 - List of specific changes made
 - Another change
 
 ## Testing
+
 - How was this tested?
 - What should reviewers check?
 
@@ -91,10 +97,12 @@ closes #<issue-number>
 ## Usage
 
 Invoke this agent when work is complete:
+
 - `@pr-creator create PR for issue #42`
 - `@pr-creator land the plane for issue #42`
 
 The agent will:
+
 1. Check git status
 2. Commit any uncommitted changes
 3. Push the branch
