@@ -28,7 +28,7 @@ interface SidebarProps {
 
 export function Sidebar({ onItemPress }: SidebarProps) {
   const { colors, isDark } = useTheme();
-  const { ui } = useFonts();
+  const { uiFont } = useFonts();
   const servers = useServers();
   const activeServer = useActiveServer();
   const activeServerId = useActiveServerId();
@@ -86,7 +86,7 @@ export function Sidebar({ onItemPress }: SidebarProps) {
             onPress={() => setServerMenuOpen(true)}
           >
             <Text
-              style={[styles.serverName, { color: colors.text, fontFamily: ui.fontFamily }]}
+              style={[styles.serverName, { color: colors.text, fontFamily: uiFont }]}
               numberOfLines={1}
             >
               {activeServer?.name || activeServer?.url || 'Select Server'}
@@ -127,7 +127,7 @@ export function Sidebar({ onItemPress }: SidebarProps) {
                   styles.menuTitle,
                   {
                     color: colors.text,
-                    fontFamily: ui.fontFamily,
+                    fontFamily: uiFont,
                     borderBottomColor: colors.border,
                   },
                 ]}
@@ -163,7 +163,7 @@ export function Sidebar({ onItemPress }: SidebarProps) {
                         {
                           color:
                             server.id === activeServerId ? colors.textOnInteractive : colors.text,
-                          fontFamily: ui.fontFamily,
+                          fontFamily: uiFont,
                         },
                       ]}
                       numberOfLines={1}
@@ -186,25 +186,16 @@ export function Sidebar({ onItemPress }: SidebarProps) {
 
       {/* Project List */}
       <ScrollView style={styles.projectList} showsVerticalScrollIndicator={false}>
-        <Text
-          style={[styles.sectionTitle, { color: colors.textSecondary, fontFamily: ui.fontFamily }]}
-        >
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontFamily: uiFont }]}>
           Projects
         </Text>
 
         {projects.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text
-              style={[styles.emptyText, { color: colors.textTertiary, fontFamily: ui.fontFamily }]}
-            >
+            <Text style={[styles.emptyText, { color: colors.textTertiary, fontFamily: uiFont }]}>
               No projects yet
             </Text>
-            <Text
-              style={[
-                styles.emptySubtext,
-                { color: colors.textTertiary, fontFamily: ui.fontFamily },
-              ]}
-            >
+            <Text style={[styles.emptySubtext, { color: colors.textTertiary, fontFamily: uiFont }]}>
               Add a server to get started
             </Text>
           </View>
@@ -226,7 +217,7 @@ export function Sidebar({ onItemPress }: SidebarProps) {
                   styles.projectName,
                   {
                     color: colors.text,
-                    fontFamily: ui.fontFamily,
+                    fontFamily: uiFont,
                   },
                 ]}
                 numberOfLines={1}
@@ -240,12 +231,7 @@ export function Sidebar({ onItemPress }: SidebarProps) {
         {/* New Project Button */}
         <TouchableOpacity style={styles.newProjectButton} onPress={handleNewProjectPress}>
           <IconSymbol name="plus" size={20} color={colors.surfaceBrand} />
-          <Text
-            style={[
-              styles.newProjectText,
-              { color: colors.surfaceBrand, fontFamily: ui.fontFamily },
-            ]}
-          >
+          <Text style={[styles.newProjectText, { color: colors.surfaceBrand, fontFamily: uiFont }]}>
             New Project
           </Text>
         </TouchableOpacity>
@@ -255,7 +241,7 @@ export function Sidebar({ onItemPress }: SidebarProps) {
       <View style={[styles.bottomSection, { borderTopColor: colors.border || 'rgba(0,0,0,0.1)' }]}>
         <TouchableOpacity style={styles.preferencesButton} onPress={handlePreferencesPress}>
           <IconSymbol name="gear" size={20} color={colors.textSecondary} />
-          <Text style={[styles.preferencesText, { color: colors.text, fontFamily: ui.fontFamily }]}>
+          <Text style={[styles.preferencesText, { color: colors.text, fontFamily: uiFont }]}>
             Preferences
           </Text>
         </TouchableOpacity>
