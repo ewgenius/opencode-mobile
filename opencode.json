@@ -9,8 +9,13 @@
     },
     "issue-context": {
       "mode": "subagent",
-      "description": "Gathers comprehensive context for a specific issue by fetching details from GitHub and relevant documentation",
+      "description": "Gathers comprehensive context for a specific issue and sets up a feature branch for work",
       "prompt": "{file:.opencode/agents/issue-context.md}"
+    },
+    "pr-creator": {
+      "mode": "subagent",
+      "description": "Commits work, pushes to feature branch, and creates a pull request that closes the related issue",
+      "prompt": "{file:.opencode/agents/pr-creator.md}"
     }
   }
 }
