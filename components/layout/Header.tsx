@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { Fonts } from '@/constants/theme';
+import { useTheme } from '@/components/ThemeProvider';
+import { useFonts } from '@/hooks/useFonts';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { router } from 'expo-router';
 
@@ -13,9 +13,11 @@ interface HeaderProps {
 
 export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
   const insets = useSafeAreaInsets();
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const iconColor = useThemeColor({}, 'icon');
+  const { colors } = useTheme();
+  const { ui } = useFonts();
+  const backgroundColor = colors.background;
+  const textColor = colors.text;
+  const iconColor = colors.icon;
 
   const handleAddServer = () => {
     router.push('/connect-server');
@@ -32,7 +34,7 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
         {
           backgroundColor,
           paddingTop: insets.top,
-          borderBottomColor: 'rgba(0,0,0,0.1)',
+          borderBottomColor: colors.border,
         },
       ]}
     >
@@ -48,7 +50,7 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
 
         {/* Title */}
         <Text
-          style={[styles.title, { color: textColor, fontFamily: Fonts.sans }]}
+          style={[styles.title, { color: textColor, fontFamily: ui.fontFamily }]}
           numberOfLines={1}
         >
           {title}
@@ -79,7 +81,7 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
 
 const styles = StyleSheet.create({
   container: {
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   content: {
     height: 56,

@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { Fonts } from '@/constants/theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { router } from 'expo-router';
 import { MainContent } from '@/components/layout';
 import { useTheme } from '@/components/ThemeProvider';
+import { useFonts } from '@/hooks/useFonts';
 import {
   usePreferencesStore,
   useThemeMode,
@@ -14,7 +13,6 @@ import {
   useCodeFont,
 } from '@/stores/preferencesStore';
 import { SYSTEM_FONTS, MONOSPACE_FONTS, getFontLabel } from '@/fonts/config';
-import { useFonts } from '@/hooks/useFonts';
 import { getAvailableThemes, type ThemeMetadata } from '@/themes';
 import type { ThemeMode } from '@/themes/types';
 import { Select } from '@/components/ui/select';
@@ -27,11 +25,11 @@ const THEME_MODE_OPTIONS: { value: ThemeMode; label: string }[] = [
 
 export default function Preferences() {
   const { colors } = useTheme();
+  const { ui, code } = useFonts();
   const themeMode = useThemeMode();
   const colorSchemeId = useColorSchemeId();
   const uiFont = useUIFont();
   const codeFont = useCodeFont();
-  const fonts = useFonts();
   const { setThemeMode, setColorScheme, setUIFont, setCodeFont } = usePreferencesStore();
   const [notifications, setNotifications] = React.useState(true);
   const [autoConnect, setAutoConnect] = React.useState(true);
@@ -46,11 +44,10 @@ export default function Preferences() {
     setAvailableThemes(themes);
   };
 
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const tintColor = useThemeColor({}, 'tint');
-  const iconColor = useThemeColor({}, 'icon');
-  const cardBackground = useThemeColor({}, 'background');
+  const backgroundColor = colors.background;
+  const textColor = colors.text;
+  const tintColor = colors.iconInteractive;
+  const iconColor = colors.icon;
 
   const handleBack = () => {
     router.back();
@@ -98,7 +95,7 @@ export default function Preferences() {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <IconSymbol name="chevron.left" size={28} color={textColor} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: textColor, fontFamily: Fonts.sans }]}>
+          <Text style={[styles.title, { color: textColor, fontFamily: ui.fontFamily }]}>
             Preferences
           </Text>
           <View style={styles.placeholder} />
@@ -106,16 +103,20 @@ export default function Preferences() {
 
         {/* Appearance Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
             Appearance
           </Text>
 
-          <View style={[styles.card, { backgroundColor: cardBackground }]}>
+          <View
+            style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.text }]}
+          >
             {/* Theme Mode Selector */}
             <View style={styles.selectRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="moon" size={22} color={iconColor} />
-                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                <Text
+                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
+                >
                   Theme Mode
                 </Text>
               </View>
@@ -135,7 +136,9 @@ export default function Preferences() {
             <View style={styles.selectRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="paintpalette" size={22} color={iconColor} />
-                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                <Text
+                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
+                >
                   Color Scheme
                 </Text>
               </View>
@@ -154,16 +157,20 @@ export default function Preferences() {
 
         {/* Typography Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
             Typography
           </Text>
 
-          <View style={[styles.card, { backgroundColor: cardBackground }]}>
+          <View
+            style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.text }]}
+          >
             {/* UI Font Selector */}
             <View style={styles.selectRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="textformat" size={22} color={iconColor} />
-                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                <Text
+                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
+                >
                   UI Font
                 </Text>
               </View>
@@ -183,7 +190,9 @@ export default function Preferences() {
             <View style={styles.selectRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="doc.text" size={22} color={iconColor} />
-                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                <Text
+                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
+                >
                   Code Font
                 </Text>
               </View>
@@ -201,14 +210,14 @@ export default function Preferences() {
 
             {/* Font Preview */}
             <View style={styles.previewContainer}>
-              <Text style={[styles.previewLabel, { color: iconColor, fontFamily: Fonts.sans }]}>
+              <Text style={[styles.previewLabel, { color: iconColor, fontFamily: ui.fontFamily }]}>
                 Preview
               </Text>
               <View style={[styles.previewBox, { backgroundColor: colors.surface }]}>
-                <Text style={[{ color: textColor }, fonts.ui]}>
+                <Text style={[{ color: textColor }, ui]}>
                   UI Font: The quick brown fox jumps over the lazy dog
                 </Text>
-                <Text style={[{ color: textColor, marginTop: 8 }, fonts.code]}>
+                <Text style={[{ color: textColor, marginTop: 8 }, code]}>
                   Code Font: function hello() {'{'} return 42; {'}'}
                 </Text>
               </View>
@@ -218,15 +227,19 @@ export default function Preferences() {
 
         {/* Notifications Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
             Notifications
           </Text>
 
-          <View style={[styles.card, { backgroundColor: cardBackground }]}>
+          <View
+            style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.text }]}
+          >
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="bell" size={22} color={iconColor} />
-                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                <Text
+                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
+                >
                   Push Notifications
                 </Text>
               </View>
@@ -241,15 +254,19 @@ export default function Preferences() {
 
         {/* Connection Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
             Connection
           </Text>
 
-          <View style={[styles.card, { backgroundColor: cardBackground }]}>
+          <View
+            style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.text }]}
+          >
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="bolt" size={22} color={iconColor} />
-                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                <Text
+                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
+                >
                   Auto-connect on Launch
                 </Text>
               </View>
@@ -264,27 +281,33 @@ export default function Preferences() {
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: Fonts.sans }]}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: ui.fontFamily }]}>
             About
           </Text>
 
-          <View style={[styles.card, { backgroundColor: cardBackground }]}>
+          <View
+            style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.text }]}
+          >
             <TouchableOpacity style={styles.settingRow} onPress={handleAbout}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="info.circle" size={22} color={iconColor} />
-                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                <Text
+                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
+                >
                   About OpenCode
                 </Text>
               </View>
               <IconSymbol name="chevron.right" size={20} color={iconColor} />
             </TouchableOpacity>
 
-            <View style={[styles.divider, { backgroundColor: 'rgba(0,0,0,0.1)' }]} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <TouchableOpacity style={styles.settingRow} onPress={handlePrivacy}>
               <View style={styles.settingInfo}>
                 <IconSymbol name="lock.shield" size={22} color={iconColor} />
-                <Text style={[styles.settingLabel, { color: textColor, fontFamily: Fonts.sans }]}>
+                <Text
+                  style={[styles.settingLabel, { color: textColor, fontFamily: ui.fontFamily }]}
+                >
                   Privacy Policy
                 </Text>
               </View>
@@ -294,7 +317,7 @@ export default function Preferences() {
         </View>
 
         {/* Version Info */}
-        <Text style={[styles.version, { color: iconColor, fontFamily: Fonts.sans }]}>
+        <Text style={[styles.version, { color: iconColor, fontFamily: ui.fontFamily }]}>
           Version 1.0.0 (Build 1)
         </Text>
       </ScrollView>
@@ -337,7 +360,6 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 12,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,

@@ -1,6 +1,6 @@
 /**
  * Theme Types
- * 
+ *
  * Type definitions for the mobile theme system.
  */
 
@@ -133,4 +133,5 @@ export interface ThemeContextValue {
   setThemeMode: (mode: ThemeMode) => void;
   setColorScheme: (schemeId: string) => void;
   isDark: boolean;
+  isReady: boolean;
 }

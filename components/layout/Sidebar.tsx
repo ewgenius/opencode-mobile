@@ -27,7 +27,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onItemPress }: SidebarProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { ui } = useFonts();
   const servers = useServers();
   const activeServer = useActiveServer();
@@ -79,9 +79,12 @@ export function Sidebar({ onItemPress }: SidebarProps) {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Server Selector */}
-      <View style={styles.serverSection}>
+      <View style={[styles.serverSection, { borderBottomColor: colors.border }]}>
         <View style={styles.serverSelector}>
-          <Pressable style={styles.serverButton} onPress={() => setServerMenuOpen(true)}>
+          <Pressable
+            style={[styles.serverButton, { backgroundColor: colors.surfaceHover }]}
+            onPress={() => setServerMenuOpen(true)}
+          >
             <Text
               style={[styles.serverName, { color: colors.text, fontFamily: ui.fontFamily }]}
               numberOfLines={1}
@@ -91,7 +94,10 @@ export function Sidebar({ onItemPress }: SidebarProps) {
             <IconSymbol name="chevron.down" size={16} color={colors.textSecondary} />
           </Pressable>
 
-          <TouchableOpacity style={styles.addServerButton} onPress={handleAddServerPress}>
+          <TouchableOpacity
+            style={[styles.addServerButton, { backgroundColor: colors.surfaceHover }]}
+            onPress={handleAddServerPress}
+          >
             <IconSymbol name="plus" size={20} color={colors.surfaceBrand} />
           </TouchableOpacity>
         </View>
@@ -104,7 +110,10 @@ export function Sidebar({ onItemPress }: SidebarProps) {
           onRequestClose={() => setServerMenuOpen(false)}
         >
           <Pressable
-            style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}
+            style={[
+              styles.modalOverlay,
+              { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)' },
+            ]}
             onPress={() => setServerMenuOpen(false)}
           >
             <View
@@ -113,7 +122,16 @@ export function Sidebar({ onItemPress }: SidebarProps) {
                 { backgroundColor: colors.surface, borderColor: colors.border },
               ]}
             >
-              <Text style={[styles.menuTitle, { color: colors.text, fontFamily: ui.fontFamily }]}>
+              <Text
+                style={[
+                  styles.menuTitle,
+                  {
+                    color: colors.text,
+                    fontFamily: ui.fontFamily,
+                    borderBottomColor: colors.border,
+                  },
+                ]}
+              >
                 Servers
               </Text>
 
@@ -253,8 +271,7 @@ const styles = StyleSheet.create({
   },
   serverSection: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   serverSelector: {
     flexDirection: 'row',
@@ -267,12 +284,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 8,
   },
   addServerButton: {
     padding: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 8,
   },
   serverName: {
@@ -297,8 +312,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   serverList: {
     maxHeight: 300,
@@ -308,8 +322,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   serverOptionText: {
     fontSize: 15,
@@ -317,8 +329,7 @@ const styles = StyleSheet.create({
   },
   menuActions: {
     padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   projectList: {
     flex: 1,

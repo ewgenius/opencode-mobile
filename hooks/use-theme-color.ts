@@ -1,21 +1,31 @@
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * @deprecated Use `useTheme()` from `@/components/ThemeProvider` instead.
+ * This hook is maintained for backwards compatibility but will be removed in a future version.
+ *
+ * Example migration:
+ * ```tsx
+ * // Before:
+ * const backgroundColor = useThemeColor({}, 'background');
+ *
+ * // After:
+ * const { colors } = useTheme();
+ * const backgroundColor = colors.background;
+ * ```
  */
 
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/components/ThemeProvider';
+import type { ThemeColors } from '@/themes/types';
 
 export function useThemeColor(
   props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
-) {
-  const theme = useColorScheme() ?? 'light';
-  const colorFromProps = props[theme];
+  colorName: keyof ThemeColors
+): string {
+  const { colors, mode } = useTheme();
+  const colorFromProps = props[mode];
 
   if (colorFromProps) {
     return colorFromProps;
-  } else {
-    return Colors[theme][colorName];
   }
+
+  return colors[colorName];
 }
