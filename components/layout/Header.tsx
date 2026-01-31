@@ -7,14 +7,13 @@ import { HeaderButton } from '@/components/ui/HeaderButton';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { useApi } from '@/hooks/useApi';
 import { useIsDeviceOffline } from '@/stores';
-import { router } from 'expo-router';
 
 interface HeaderProps {
   onMenuPress: () => void;
-  title?: string;
+  title: string;
 }
 
-export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
+export function Header({ onMenuPress, title }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { uiFont } = useFonts();
@@ -22,18 +21,9 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
   const isDeviceOffline = useIsDeviceOffline();
   const backgroundColor = colors.background;
   const textColor = colors.text;
-  const iconColor = colors.icon;
 
   // Show offline banner when device is offline OR server is not connected
   const showOfflineBanner = isDeviceOffline || !isServerConnected;
-
-  const handleAddServer = () => {
-    router.push('/connect-server');
-  };
-
-  const handleSettings = () => {
-    router.push('/preferences');
-  };
 
   // Determine offline message based on state
   const getOfflineSubtitle = (): string | undefined => {
@@ -72,24 +62,8 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
           {title}
         </Text>
 
-        {/* Right Actions */}
-        <View style={styles.rightActions}>
-          <HeaderButton
-            icon="plus"
-            size={24}
-            color={iconColor}
-            onPress={handleAddServer}
-            accessibilityLabel="Add server"
-          />
-
-          <HeaderButton
-            icon="gear"
-            size={22}
-            color={iconColor}
-            onPress={handleSettings}
-            accessibilityLabel="Settings"
-          />
-        </View>
+        {/* Right Actions - now empty, kept for layout balance */}
+        <View style={styles.rightActions} />
       </View>
 
       {/* Global Offline Banner */}
@@ -109,10 +83,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 12,
   },
-  iconButton: {
-    padding: 8,
-    borderRadius: 0,
-  },
   title: {
     fontSize: 17,
     fontWeight: '600',
@@ -121,8 +91,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   rightActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 0,
+    width: 40, // Fixed width to balance the hamburger menu button
   },
 });
