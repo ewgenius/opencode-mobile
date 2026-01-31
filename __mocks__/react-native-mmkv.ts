@@ -1,4 +1,5 @@
-// Mock implementation of react-native-mmkv
+// Mock implementation of react-native-mmkv (v2.x API)
+// Note: v2.x only exports MMKV class, not createMMKV function
 export class MMKV {
   private storage: Map<string, string> = new Map();
   private id: string;
@@ -32,8 +33,4 @@ export class MMKV {
   }
 }
 
-export function createMMKV(config?: { id?: string }): MMKV {
-  return new MMKV(config);
-}
-
-export default { MMKV, createMMKV };
+export default { MMKV };

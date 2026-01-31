@@ -1,23 +1,12 @@
 // Basic jest setup without Expo-specific imports
 
-// Mock react-native-mmkv
+// Mock react-native-mmkv (v2.x API - only MMKV class, no createMMKV)
 jest.mock('react-native-mmkv', () => ({
   MMKV: jest.fn().mockImplementation(() => ({
     getString: jest.fn(),
     set: jest.fn(),
     delete: jest.fn(),
     getAllKeys: jest.fn(),
-  })),
-  createMMKV: jest.fn().mockImplementation(() => ({
-    getString: jest.fn(key => {
-      const storage: Record<string, string> = {};
-      return storage[key] || null;
-    }),
-    set: jest.fn((key, value) => {
-      const storage: Record<string, string> = {};
-      storage[key] = value;
-    }),
-    remove: jest.fn(),
   })),
 }));
 
