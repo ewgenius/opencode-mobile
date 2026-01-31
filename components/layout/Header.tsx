@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { HeaderButton } from '@/components/ui/HeaderButton';
 import { router } from 'expo-router';
 
 interface HeaderProps {
@@ -40,13 +40,13 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
     >
       <View style={styles.content}>
         {/* Hamburger Menu */}
-        <TouchableOpacity
+        <HeaderButton
+          icon="line.3.horizontal"
+          size={24}
+          color={textColor}
           onPress={onMenuPress}
-          style={styles.iconButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <IconSymbol name="line.3.horizontal" size={24} color={textColor} />
-        </TouchableOpacity>
+          accessibilityLabel="Open menu"
+        />
 
         {/* Title */}
         <Text style={[styles.title, { color: textColor, fontFamily: uiFont }]} numberOfLines={1}>
@@ -55,21 +55,21 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
 
         {/* Right Actions */}
         <View style={styles.rightActions}>
-          <TouchableOpacity
+          <HeaderButton
+            icon="plus"
+            size={24}
+            color={iconColor}
             onPress={handleAddServer}
-            style={styles.iconButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <IconSymbol name="plus" size={24} color={iconColor} />
-          </TouchableOpacity>
+            accessibilityLabel="Add server"
+          />
 
-          <TouchableOpacity
+          <HeaderButton
+            icon="gear"
+            size={22}
+            color={iconColor}
             onPress={handleSettings}
-            style={styles.iconButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <IconSymbol name="gear" size={22} color={iconColor} />
-          </TouchableOpacity>
+            accessibilityLabel="Settings"
+          />
         </View>
       </View>
     </View>
@@ -101,5 +101,6 @@ const styles = StyleSheet.create({
   rightActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 0,
   },
 });
