@@ -4,6 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
 import { HeaderButton } from '@/components/ui/HeaderButton';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { useApi } from '@/hooks/useApi';
+import { useIsDeviceOffline } from '@/stores';
 import { router } from 'expo-router';
 
 interface HeaderProps {
@@ -15,9 +18,14 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { uiFont } = useFonts();
+  const { isConnected: isServerConnected } = useApi();
+  const isDeviceOffline = useIsDeviceOffline();
   const backgroundColor = colors.background;
   const textColor = colors.text;
   const iconColor = colors.icon;
+
+  // Show offline banner when device is offline OR server is not connected
+  const showOfflineBanner = isDeviceOffline || !isServerConnected;
 
   const handleAddServer = () => {
     router.push('/connect-server');
@@ -25,6 +33,17 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
 
   const handleSettings = () => {
     router.push('/preferences');
+  };
+
+  // Determine offline message based on state
+  const getOfflineSubtitle = (): string | undefined => {
+    if (isDeviceOffline) {
+      return 'Device offline - Check your internet connection';
+    }
+    if (!isServerConnected) {
+      return 'Server unreachable - Check server connection';
+    }
+    return undefined;
   };
 
   return (
@@ -72,6 +91,9 @@ export function Header({ onMenuPress, title = 'OpenCode' }: HeaderProps) {
           />
         </View>
       </View>
+
+      {/* Global Offline Banner */}
+      {showOfflineBanner && <OfflineBanner subtitle={getOfflineSubtitle()} />}
     </View>
   );
 }

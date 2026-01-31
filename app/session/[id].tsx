@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/components/ThemeProvider';
@@ -8,7 +8,9 @@ import { useMessages, useStreamingMessage } from '@/hooks';
 import { MainContent, SessionHeader } from '@/components/layout';
 import { MessageList, InputPane } from '@/components/chat';
 import { SelectOption } from '@/components/ui/select';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useIsDeviceOffline, useCacheStore } from '@/stores';
 
 // Placeholder agent and model options - these would come from API in production
 const AGENT_OPTIONS: SelectOption[] = [
@@ -24,11 +26,30 @@ const MODEL_OPTIONS: SelectOption[] = [
   { value: 'gpt-3.5-turbo', label: 'GPT-3.5' },
 ];
 
+// Format relative time (e.g., "5 min ago")
+function formatRelativeTime(timestamp: number | null): string {
+  if (!timestamp) return 'Never';
+
+  const now = Date.now();
+  const diff = now - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (seconds < 60) return 'Just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  return `${days} day${days > 1 ? 's' : ''} ago`;
+}
+
 export default function SessionChat() {
   const { id: sessionId } = useLocalSearchParams<{ id: string }>();
   const { colors } = useTheme();
   const { uiFont } = useFonts();
   const { isConnected } = useApi();
+  const isDeviceOffline = useIsDeviceOffline();
+  const getLastSyncAt = useCacheStore(state => state.getLastSyncAt);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch messages
@@ -43,6 +64,11 @@ export default function SessionChat() {
     streamingMessage,
     error: streamError,
   } = useStreamingMessage();
+
+  // Get last synced time for this session
+  const lastSyncedAt = useMemo(() => {
+    return getLastSyncAt('messages', sessionId || '');
+  }, [getLastSyncAt, sessionId]);
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
@@ -71,23 +97,25 @@ export default function SessionChat() {
     router.back();
   }, []);
 
-  // Offline banner styles
-  const offlineBannerStyle = {
-    backgroundColor: colors.surfaceWarning,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    gap: 8,
-  };
+  // Determine offline banner subtitle
+  const offlineSubtitle = useMemo(() => {
+    if (isDeviceOffline) {
+      return 'Device offline - Check your internet connection';
+    }
+    if (!isConnected) {
+      return 'Server unreachable - Check server connection';
+    }
+    return undefined;
+  }, [isDeviceOffline, isConnected]);
 
-  const offlineTextStyle = {
-    fontFamily: uiFont,
-    fontSize: 14,
-    color: colors.textOnWarning,
-    fontWeight: '500' as const,
-  };
+  // Add last synced info when offline
+  const extendedOfflineSubtitle = useMemo(() => {
+    if (!isConnected || isDeviceOffline) {
+      const syncText = `Last synced: ${formatRelativeTime(lastSyncedAt)}`;
+      return offlineSubtitle ? `${offlineSubtitle}\n${syncText}` : syncText;
+    }
+    return undefined;
+  }, [isConnected, isDeviceOffline, offlineSubtitle, lastSyncedAt]);
 
   // Error banner styles
   const errorBannerStyle = {
@@ -112,13 +140,8 @@ export default function SessionChat() {
       {/* Header */}
       <SessionHeader title="Session" onBackPress={handleBack} />
 
-      {/* Offline Banner */}
-      {!isConnected && (
-        <View style={offlineBannerStyle}>
-          <IconSymbol name="wifi.slash" size={16} color={colors.textOnWarning} />
-          <Text style={offlineTextStyle}>Offline - Connect to send messages</Text>
-        </View>
-      )}
+      {/* Offline Banner - show when either device offline or server not connected */}
+      {(!isConnected || isDeviceOffline) && <OfflineBanner subtitle={extendedOfflineSubtitle} />}
 
       {/* Error Banner */}
       {streamError && (
@@ -144,7 +167,7 @@ export default function SessionChat() {
           {/* Input Area */}
           <InputPane
             onSend={handleSend}
-            isConnected={isConnected}
+            isConnected={isConnected && !isDeviceOffline}
             agents={AGENT_OPTIONS}
             models={MODEL_OPTIONS}
             disabled={isStreamLoading}
