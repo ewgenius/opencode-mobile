@@ -236,8 +236,8 @@ export class OpencodeApi {
       if (response?.data) {
         return response.data;
       }
-      // Fallback if health endpoint doesn't exist
-      return { version: 'unknown', healthy: true };
+      // No response data means server is not running properly
+      throw new Error('Server health check failed - no response data');
     } catch (error) {
       const classified = classifyError(error);
       throw new Error(classified.userMessage);
