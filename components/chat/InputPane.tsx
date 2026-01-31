@@ -23,6 +23,8 @@ interface InputPaneProps {
   agents?: SelectOption[];
   models?: SelectOption[];
   disabled?: boolean;
+  isStreaming?: boolean;
+  onCancel?: () => void;
 }
 
 export function InputPane({
@@ -31,6 +33,8 @@ export function InputPane({
   agents = [],
   models = [],
   disabled = false,
+  isStreaming = false,
+  onCancel,
 }: InputPaneProps) {
   const { colors } = useTheme();
   const { uiFont } = useFonts();
@@ -38,7 +42,7 @@ export function InputPane({
   const [selectedAgent, setSelectedAgent] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
 
-  const canSend = content.trim().length > 0 && isConnected && !disabled;
+  const canSend = content.trim().length > 0 && isConnected && !disabled && !isStreaming;
 
   const handleSend = useCallback(() => {
     if (!canSend) return;
@@ -48,6 +52,10 @@ export function InputPane({
     onSend(content.trim(), selectedAgent || undefined, model);
     setContent('');
   }, [content, selectedAgent, selectedModel, canSend, onSend]);
+
+  const handleCancel = useCallback(() => {
+    onCancel?.();
+  }, [onCancel]);
 
   const containerStyle: ViewStyle = {
     backgroundColor: colors.background,
@@ -89,6 +97,15 @@ export function InputPane({
     opacity: isEnabled ? 1 : 0.5,
   });
 
+  const cancelButtonStyle: ViewStyle = {
+    width: 40,
+    height: 40,
+    borderRadius: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.surfaceError,
+  };
+
   const selectorsContainerStyle: ViewStyle = {
     flexDirection: 'row',
     gap: 4,
@@ -115,7 +132,7 @@ export function InputPane({
                   onChange={setSelectedAgent}
                   size="sm"
                   placeholder="Agent..."
-                  disabled={!isConnected || disabled}
+                  disabled={!isConnected || disabled || isStreaming}
                 />
               </View>
             )}
@@ -127,7 +144,7 @@ export function InputPane({
                   onChange={setSelectedModel}
                   size="sm"
                   placeholder="Model..."
-                  disabled={!isConnected || disabled}
+                  disabled={!isConnected || disabled || isStreaming}
                 />
               </View>
             )}
@@ -143,23 +160,36 @@ export function InputPane({
             placeholderTextColor={colors.textTertiary}
             multiline
             maxLength={4000}
-            editable={isConnected && !disabled}
+            editable={isConnected && !disabled && !isStreaming}
             onSubmitEditing={() => {
               if (Platform.OS === 'web') {
                 handleSend();
               }
             }}
           />
-          <Pressable onPress={handleSend} disabled={!canSend}>
-            <View style={sendButtonStyle(canSend)}>
-              <SymbolView
-                name="arrow.up"
-                size={20}
-                tintColor={canSend ? colors.textOnBrand : colors.iconDisabled}
-                weight="semibold"
-              />
-            </View>
-          </Pressable>
+          {isStreaming ? (
+            <Pressable onPress={handleCancel}>
+              <View style={cancelButtonStyle}>
+                <SymbolView
+                  name="xmark"
+                  size={20}
+                  tintColor={colors.textOnError}
+                  weight="semibold"
+                />
+              </View>
+            </Pressable>
+          ) : (
+            <Pressable onPress={handleSend} disabled={!canSend}>
+              <View style={sendButtonStyle(canSend)}>
+                <SymbolView
+                  name="arrow.up"
+                  size={20}
+                  tintColor={canSend ? colors.textOnBrand : colors.iconDisabled}
+                  weight="semibold"
+                />
+              </View>
+            </Pressable>
+          )}
         </View>
       </View>
     </KeyboardAvoidingView>

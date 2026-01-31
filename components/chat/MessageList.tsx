@@ -18,6 +18,8 @@ interface MessageListProps {
   isLoading: boolean;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  streamingMessage?: MessageWithParts | null;
+  isStreaming?: boolean;
 }
 
 export function MessageList({
@@ -25,17 +27,23 @@ export function MessageList({
   isLoading,
   onRefresh,
   isRefreshing = false,
+  streamingMessage,
+  isStreaming = false,
 }: MessageListProps) {
   const { colors } = useTheme();
   const { uiFont } = useFonts();
   const listRef = useRef<FlashListRef<MessageWithParts> | null>(null);
 
-  const renderItem: ListRenderItem<MessageWithParts> = useCallback(
-    ({ item }) => <MessageItem message={item} />,
-    []
-  );
-
   const keyExtractor = (item: MessageWithParts) => item.id;
+
+  // Custom render item that handles streaming state
+  const renderItem: ListRenderItem<MessageWithParts> = useCallback(
+    ({ item }) => {
+      const isStreamingMessage = isStreaming && item.id === streamingMessage?.id;
+      return <MessageItem message={item} isStreaming={isStreamingMessage} />;
+    },
+    [isStreaming, streamingMessage?.id]
+  );
 
   const containerStyle: ViewStyle = {
     flex: 1,
@@ -88,7 +96,12 @@ export function MessageList({
     );
   }
 
-  const sortedMessages = [...messages].sort((a, b) => a.timestamp - b.timestamp);
+  // Combine regular messages with streaming message
+  const allMessages = [...messages];
+  if (streamingMessage) {
+    allMessages.push(streamingMessage);
+  }
+  const sortedMessages = allMessages.sort((a, b) => a.timestamp - b.timestamp);
 
   return (
     <View style={containerStyle}>

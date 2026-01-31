@@ -7,9 +7,10 @@ import type { MessageWithParts } from '@/types/messageParts';
 
 interface MessageItemProps {
   message: MessageWithParts;
+  isStreaming?: boolean;
 }
 
-export function MessageItem({ message }: MessageItemProps) {
+export function MessageItem({ message, isStreaming = false }: MessageItemProps) {
   const { colors } = useTheme();
   const { uiFont } = useFonts();
   const isUser = message.role === 'user';
@@ -35,6 +36,13 @@ export function MessageItem({ message }: MessageItemProps) {
     marginTop: 4,
   };
 
+  const streamingIndicatorStyle: TextStyle = {
+    fontFamily: uiFont,
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginLeft: 2,
+  };
+
   const formatTimestamp = (timestamp: number): string => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -47,6 +55,10 @@ export function MessageItem({ message }: MessageItemProps) {
         {message.parts.map(part => (
           <PartRenderer key={part.id} part={part} isUser={isUser} />
         ))}
+
+        {/* Streaming indicator - blinking cursor */}
+        {isStreaming && !isUser && <Text style={streamingIndicatorStyle}>▊</Text>}
+
         <Text style={timestampStyle}>{formatTimestamp(message.timestamp)}</Text>
       </View>
     </View>

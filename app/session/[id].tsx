@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
 import { useApi } from '@/hooks/useApi';
-import { useMessages, useSendMessage } from '@/hooks';
+import { useMessages, useStreamingMessage } from '@/hooks';
 import { MainContent, SessionHeader } from '@/components/layout';
 import { MessageList, InputPane } from '@/components/chat';
 import { SelectOption } from '@/components/ui/select';
@@ -30,13 +30,19 @@ export default function SessionChat() {
   const { uiFont } = useFonts();
   const { isConnected } = useApi();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSending, setIsSending] = useState(false);
 
   // Fetch messages
   const { data: messages = [], isLoading, refetch } = useMessages(sessionId || null);
 
-  // Send message mutation
-  const sendMessageMutation = useSendMessage();
+  // Streaming message hook
+  const {
+    sendMessage: sendStreamingMessage,
+    cancelStream,
+    isStreaming,
+    isLoading: isStreamLoading,
+    streamingMessage,
+    error: streamError,
+  } = useStreamingMessage();
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
@@ -45,25 +51,20 @@ export default function SessionChat() {
     setIsRefreshing(false);
   }, [refetch]);
 
-  // Handle send message
+  // Handle send message with streaming
   const handleSend = useCallback(
     async (content: string, agent?: string, model?: { providerID: string; modelID: string }) => {
       if (!sessionId || !isConnected) return;
 
-      setIsSending(true);
-      try {
-        await sendMessageMutation.mutateAsync({
-          sessionId,
-          content,
-          agent,
-          model,
-        });
-      } finally {
-        setIsSending(false);
-      }
+      await sendStreamingMessage(sessionId, content, { agent, model });
     },
-    [sessionId, isConnected, sendMessageMutation]
+    [sessionId, isConnected, sendStreamingMessage]
   );
+
+  // Handle cancel streaming
+  const handleCancel = useCallback(() => {
+    cancelStream();
+  }, [cancelStream]);
 
   // Handle back navigation
   const handleBack = useCallback(() => {
@@ -88,6 +89,24 @@ export default function SessionChat() {
     fontWeight: '500' as const,
   };
 
+  // Error banner styles
+  const errorBannerStyle = {
+    backgroundColor: colors.surfaceError,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+  };
+
+  const errorTextStyle = {
+    fontFamily: uiFont,
+    fontSize: 14,
+    color: colors.textOnError,
+    fontWeight: '500' as const,
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
@@ -101,6 +120,14 @@ export default function SessionChat() {
         </View>
       )}
 
+      {/* Error Banner */}
+      {streamError && (
+        <View style={errorBannerStyle}>
+          <IconSymbol name="exclamationmark.triangle" size={16} color={colors.textOnError} />
+          <Text style={errorTextStyle}>{streamError.message}</Text>
+        </View>
+      )}
+
       {/* Main Content */}
       <MainContent>
         <View style={styles.content}>
@@ -110,6 +137,8 @@ export default function SessionChat() {
             isLoading={isLoading}
             onRefresh={handleRefresh}
             isRefreshing={isRefreshing}
+            streamingMessage={streamingMessage}
+            isStreaming={isStreaming}
           />
 
           {/* Input Area */}
@@ -118,17 +147,12 @@ export default function SessionChat() {
             isConnected={isConnected}
             agents={AGENT_OPTIONS}
             models={MODEL_OPTIONS}
-            disabled={isSending}
+            disabled={isStreamLoading}
+            isStreaming={isStreaming}
+            onCancel={handleCancel}
           />
         </View>
       </MainContent>
-
-      {/* Loading Overlay for Send */}
-      {isSending && (
-        <View style={styles.sendingOverlay}>
-          <ActivityIndicator size="large" color={colors.icon} />
-        </View>
-      )}
     </View>
   );
 }
@@ -139,11 +163,5 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  sendingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

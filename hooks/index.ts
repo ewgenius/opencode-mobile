@@ -23,3 +23,10 @@ export {
   useDeleteSession,
   useAbortSession,
 } from './useMutations';
+
+// Streaming hooks
+export {
+  useStreamingMessage,
+  type StreamingState,
+  type UseStreamingMessageResult,
+} from './useStreamingMessage';
