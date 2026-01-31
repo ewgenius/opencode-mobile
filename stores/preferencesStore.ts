@@ -6,7 +6,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { createMMKV, type MMKV } from 'react-native-mmkv';
+import { MMKV } from 'react-native-mmkv';
 import type { ThemeMode } from '@/themes/types';
 
 // Lazy initialization of MMKV instance to avoid crash on app launch
@@ -15,7 +15,7 @@ let storageInstance: MMKV | null = null;
 function getStorage(): MMKV {
   if (!storageInstance) {
     try {
-      storageInstance = createMMKV({
+      storageInstance = new MMKV({
         id: 'preferences-storage',
       });
     } catch (error) {
@@ -49,7 +49,7 @@ const mmkvStorage = {
   removeItem: (name: string): void => {
     try {
       const storage = getStorage();
-      storage.remove(name);
+      storage.delete(name);
     } catch (error) {
       console.error('MMKV removeItem error:', error);
     }

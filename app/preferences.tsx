@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { router } from 'expo-router';
 import { MainContent } from '@/components/layout';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
 import { usePreferencesStore, useThemeMode, useColorSchemeId } from '@/stores/preferencesStore';
+import { useCacheStore, type CacheStats } from '@/stores/cacheStore';
+import { useQueryClient } from '@tanstack/react-query';
 import { SYSTEM_FONTS, MONOSPACE_FONTS } from '@/fonts/config';
 import { getAvailableThemes, type ThemeMetadata } from '@/themes';
 import type { ThemeMode } from '@/themes/types';
@@ -26,10 +28,65 @@ export default function Preferences() {
   const [notifications, setNotifications] = React.useState(true);
   const [autoConnect, setAutoConnect] = React.useState(true);
   const [availableThemes, setAvailableThemes] = useState<ThemeMetadata[]>([]);
+  const [cacheStats, setCacheStats] = useState<CacheStats | null>(null);
+  const cacheStore = useCacheStore();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     loadThemes();
+    updateCacheStats();
   }, []);
+
+  const updateCacheStats = useCallback(() => {
+    const stats = cacheStore.getCacheStats();
+    setCacheStats(stats);
+  }, [cacheStore]);
+
+  const handleClearCache = useCallback(() => {
+    Alert.alert(
+      'Clear All Cache',
+      'This will clear all cached data including projects, sessions, and messages. This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Clear Cache',
+          style: 'destructive',
+          onPress: () => {
+            cacheStore.resetCache();
+            queryClient.clear();
+            updateCacheStats();
+          },
+        },
+      ]
+    );
+  }, [cacheStore, queryClient, updateCacheStats]);
+
+  const handleRefreshProjects = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    updateCacheStats();
+  }, [queryClient, updateCacheStats]);
+
+  const handleRefreshSessions = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['sessions'] });
+    updateCacheStats();
+  }, [queryClient, updateCacheStats]);
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatTime = (timestamp: number | null): string => {
+    if (!timestamp) return 'Never';
+    const date = new Date(timestamp);
+    return date.toLocaleString();
+  };
 
   const loadThemes = async () => {
     const themes = await getAvailableThemes();
@@ -257,6 +314,115 @@ export default function Preferences() {
           </View>
         </View>
 
+        {/* Cache Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: uiFont }]}>Cache</Text>
+
+          <View
+            style={[styles.card, { backgroundColor: colors.surface, shadowColor: colors.text }]}
+          >
+            {/* Cache Stats */}
+            {cacheStats && (
+              <>
+                <View style={styles.cacheStatsContainer}>
+                  <View style={styles.cacheStatRow}>
+                    <Text style={[styles.cacheStatLabel, { color: iconColor, fontFamily: uiFont }]}>
+                      Projects
+                    </Text>
+                    <Text style={[styles.cacheStatValue, { color: textColor, fontFamily: uiFont }]}>
+                      {cacheStats.projects.count} items (
+                      {formatBytes(cacheStats.projects.totalSize)})
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.cacheSyncTime,
+                      { color: colors.textTertiary, fontFamily: uiFont },
+                    ]}
+                  >
+                    Last sync: {formatTime(cacheStats.projects.lastSyncAt)}
+                  </Text>
+
+                  <View style={[styles.cacheStatRow, { marginTop: 12 }]}>
+                    <Text style={[styles.cacheStatLabel, { color: iconColor, fontFamily: uiFont }]}>
+                      Sessions
+                    </Text>
+                    <Text style={[styles.cacheStatValue, { color: textColor, fontFamily: uiFont }]}>
+                      {cacheStats.sessions.count} items (
+                      {formatBytes(cacheStats.sessions.totalSize)})
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.cacheSyncTime,
+                      { color: colors.textTertiary, fontFamily: uiFont },
+                    ]}
+                  >
+                    Last sync: {formatTime(cacheStats.sessions.lastSyncAt)}
+                  </Text>
+
+                  <View style={[styles.cacheStatRow, { marginTop: 12 }]}>
+                    <Text style={[styles.cacheStatLabel, { color: iconColor, fontFamily: uiFont }]}>
+                      Messages
+                    </Text>
+                    <Text style={[styles.cacheStatValue, { color: textColor, fontFamily: uiFont }]}>
+                      {cacheStats.messages.count} items (
+                      {formatBytes(cacheStats.messages.totalSize)})
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.cacheSyncTime,
+                      { color: colors.textTertiary, fontFamily: uiFont },
+                    ]}
+                  >
+                    Last sync: {formatTime(cacheStats.messages.lastSyncAt)}
+                  </Text>
+                </View>
+
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              </>
+            )}
+
+            {/* Refresh Projects */}
+            <TouchableOpacity style={styles.settingRow} onPress={handleRefreshProjects}>
+              <View style={styles.settingInfo}>
+                <IconSymbol name="arrow.clockwise" size={22} color={iconColor} />
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
+                  Refresh Projects
+                </Text>
+              </View>
+              <IconSymbol name="arrow.clockwise" size={20} color={iconColor} />
+            </TouchableOpacity>
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            {/* Refresh Sessions */}
+            <TouchableOpacity style={styles.settingRow} onPress={handleRefreshSessions}>
+              <View style={styles.settingInfo}>
+                <IconSymbol name="arrow.clockwise.circle" size={22} color={iconColor} />
+                <Text style={[styles.settingLabel, { color: textColor, fontFamily: uiFont }]}>
+                  Refresh Sessions
+                </Text>
+              </View>
+              <IconSymbol name="arrow.clockwise" size={20} color={iconColor} />
+            </TouchableOpacity>
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            {/* Clear Cache */}
+            <TouchableOpacity style={styles.settingRow} onPress={handleClearCache}>
+              <View style={styles.settingInfo}>
+                <IconSymbol name="trash" size={22} color="#ff3b30" />
+                <Text style={[styles.settingLabel, { color: '#ff3b30', fontFamily: uiFont }]}>
+                  Clear All Cache
+                </Text>
+              </View>
+              <IconSymbol name="chevron.right" size={20} color="#ff3b30" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* About Section */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: iconColor, fontFamily: uiFont }]}>About</Text>
@@ -387,5 +553,24 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 32,
     opacity: 0.6,
+  },
+  cacheStatsContainer: {
+    padding: 16,
+  },
+  cacheStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cacheStatLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  cacheStatValue: {
+    fontSize: 14,
+  },
+  cacheSyncTime: {
+    fontSize: 12,
+    marginTop: 2,
   },
 });
