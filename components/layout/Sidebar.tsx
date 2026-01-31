@@ -18,10 +18,10 @@ import {
   useActiveServerId,
   useActiveServer,
   useServerStore,
-  useProjectsForServer,
   useProjectStore,
   useCacheStore,
   useIsDeviceOffline,
+  useCachedProjects,
 } from '@/stores';
 import { useProjects } from '@/hooks/useQueries';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,9 @@ export function Sidebar({ onItemPress }: SidebarProps) {
   const servers = useServers();
   const activeServer = useActiveServer();
   const activeServerId = useActiveServerId();
-  const projects = useProjectsForServer(activeServerId || '');
+  // Get projects from cache store where API data is stored
+  const cachedProjects = useCachedProjects(activeServerId || '');
+  const projects = (cachedProjects as Array<{ id: string; name: string }>) || [];
   const setActiveProject = useProjectStore(state => state.setActiveProject);
   const setActiveServer = useServerStore(state => state.setActiveServer);
   const getLastSyncAt = useCacheStore(state => state.getLastSyncAt);
@@ -254,7 +256,7 @@ export function Sidebar({ onItemPress }: SidebarProps) {
             </Text>
           </View>
         ) : (
-          projects.map(project => (
+          projects.map((project: { id: string; name: string }) => (
             <TouchableOpacity
               key={project.id}
               style={[
