@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -13,6 +14,7 @@ interface DrawerProps {
 
 export function Drawer({ visible, onClose, children }: DrawerProps) {
   const sidebarBackground = useThemeColor({}, 'background');
+  const insets = useSafeAreaInsets();
 
   if (!visible) {
     return null;
@@ -32,6 +34,7 @@ export function Drawer({ visible, onClose, children }: DrawerProps) {
           {
             width: DRAWER_WIDTH,
             backgroundColor: sidebarBackground,
+            paddingTop: insets.top,
           },
         ]}
         pointerEvents="auto"
