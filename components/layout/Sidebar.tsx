@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -20,12 +20,30 @@ import {
   useServerStore,
   useProjectsForServer,
   useProjectStore,
+  useCacheStore,
+  useIsDeviceOffline,
 } from '@/stores';
 import { useProjects } from '@/hooks/useQueries';
 import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
   onItemPress?: () => void;
+}
+
+// Format relative time (e.g., "5 min ago")
+function formatRelativeTime(timestamp: number | null): string {
+  if (!timestamp) return 'Never';
+
+  const now = Date.now();
+  const diff = now - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  if (seconds < 60) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return 'Long ago';
 }
 
 export function Sidebar({ onItemPress }: SidebarProps) {
@@ -37,9 +55,17 @@ export function Sidebar({ onItemPress }: SidebarProps) {
   const projects = useProjectsForServer(activeServerId || '');
   const setActiveProject = useProjectStore(state => state.setActiveProject);
   const setActiveServer = useServerStore(state => state.setActiveServer);
+  const getLastSyncAt = useCacheStore(state => state.getLastSyncAt);
+  const isDeviceOffline = useIsDeviceOffline();
   const [serverMenuOpen, setServerMenuOpen] = React.useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { refetch } = useProjects();
+
+  // Get last synced time for projects
+  const projectsLastSynced = useMemo(() => {
+    if (!activeServerId) return null;
+    return getLastSyncAt('projects', activeServerId);
+  }, [getLastSyncAt, activeServerId]);
 
   const handleProjectPress = useCallback(
     (projectId: string) => {
@@ -207,9 +233,16 @@ export function Sidebar({ onItemPress }: SidebarProps) {
           />
         }
       >
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontFamily: uiFont }]}>
-          Projects
-        </Text>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontFamily: uiFont }]}>
+            Projects
+          </Text>
+          {isDeviceOffline && projectsLastSynced && (
+            <Text style={[styles.syncedText, { color: colors.textTertiary, fontFamily: uiFont }]}>
+              Synced {formatRelativeTime(projectsLastSynced)}
+            </Text>
+          )}
+        </View>
 
         {projects.length === 0 ? (
           <View style={styles.emptyState}>
@@ -342,12 +375,21 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 12,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
-    marginBottom: 12,
     opacity: 0.7,
+  },
+  syncedText: {
+    fontSize: 11,
+    opacity: 0.6,
   },
   emptyState: {
     paddingVertical: 24,

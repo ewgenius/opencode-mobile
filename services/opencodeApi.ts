@@ -8,6 +8,34 @@ import { createOpencodeClient } from '@opencode-ai/sdk';
 import type { Server } from '@/stores';
 import type { MessageWithParts, Part, TextPart } from '@/types/messageParts';
 
+// API timeout configuration (in milliseconds)
+export const API_TIMEOUTS = {
+  health: 5000, // 5 seconds for health checks
+  projects: 10000, // 10 seconds for project operations
+  sessions: 10000, // 10 seconds for session operations
+  messages: 30000, // 30 seconds for message operations
+  streaming: 60000, // 60 seconds for streaming operations
+  default: 15000, // 15 seconds default
+} as const;
+
+// Error types for better error classification
+export type ErrorType =
+  | 'network' // No internet connection
+  | 'timeout' // Request timed out
+  | 'server' // Server returned error (5xx)
+  | 'client' // Client error (4xx)
+  | 'auth' // Authentication error (401/403)
+  | 'not_found' // Resource not found (404)
+  | 'unknown'; // Unknown error
+
+export interface ClassifiedError extends Error {
+  type: ErrorType;
+  status?: number;
+  code?: string;
+  isRetryable: boolean;
+  userMessage: string;
+}
+
 // Streaming event types
 export type StreamingEvent =
   | MessageCreatedEvent
@@ -71,6 +99,105 @@ export interface ApiError extends Error {
   code?: string;
 }
 
+/**
+ * Classify an error into a specific error type with user-friendly messages
+ */
+export function classifyError(error: unknown): ClassifiedError {
+  const defaultError: ClassifiedError = {
+    name: 'Error',
+    message: 'An unexpected error occurred',
+    type: 'unknown',
+    isRetryable: false,
+    userMessage: 'Something went wrong. Please try again later.',
+  };
+
+  if (!(error instanceof Error)) {
+    return {
+      ...defaultError,
+      message: String(error),
+    };
+  }
+
+  const classifiedError: ClassifiedError = {
+    ...defaultError,
+    name: error.name,
+    message: error.message,
+  };
+
+  // Check for network errors
+  if (
+    error.message.includes('Network request failed') ||
+    error.message.includes('fetch failed') ||
+    error.message.includes('Unable to resolve host') ||
+    error.message.includes('ECONNREFUSED') ||
+    error.message.includes('ENOTFOUND') ||
+    error.message.includes('ETIMEDOUT') ||
+    error.message.includes('network')
+  ) {
+    classifiedError.type = 'network';
+    classifiedError.isRetryable = true;
+    classifiedError.userMessage =
+      'Unable to connect to the server. Please check your internet connection.';
+    return classifiedError;
+  }
+
+  // Check for timeout errors
+  if (
+    error.message.includes('timeout') ||
+    error.message.includes('timed out') ||
+    error.message.includes('ETIMEDOUT')
+  ) {
+    classifiedError.type = 'timeout';
+    classifiedError.isRetryable = true;
+    classifiedError.userMessage = 'The request timed out. Please try again.';
+    return classifiedError;
+  }
+
+  // Check for specific HTTP status codes in error message
+  const statusMatch = error.message.match(/\b(\d{3})\b/);
+  if (statusMatch) {
+    const status = parseInt(statusMatch[1], 10);
+    classifiedError.status = status;
+
+    if (status >= 500) {
+      classifiedError.type = 'server';
+      classifiedError.isRetryable = true;
+      classifiedError.userMessage = 'The server encountered an error. Please try again later.';
+    } else if (status === 401 || status === 403) {
+      classifiedError.type = 'auth';
+      classifiedError.isRetryable = false;
+      classifiedError.userMessage = 'Authentication failed. Please check your server credentials.';
+    } else if (status === 404) {
+      classifiedError.type = 'not_found';
+      classifiedError.isRetryable = false;
+      classifiedError.userMessage = 'The requested resource was not found.';
+    } else if (status >= 400) {
+      classifiedError.type = 'client';
+      classifiedError.isRetryable = false;
+      classifiedError.userMessage = 'There was a problem with your request. Please try again.';
+    }
+  }
+
+  return classifiedError;
+}
+
+/**
+ * Wrap a promise with timeout
+ */
+export async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  operationName: string
+): Promise<T> {
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error(`${operationName} timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]);
+}
+
 export class OpencodeApi {
   private client: ReturnType<typeof createOpencodeClient>;
   private server: Server;
@@ -94,21 +221,31 @@ export class OpencodeApi {
   }
 
   /**
-   * Check server health
+   * Check server health with timeout
    */
   async health(): Promise<{ version: string; healthy: boolean }> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const clientAny = this.client as any;
-    const response = await clientAny.global?.health?.();
-    if (response?.data) {
-      return response.data;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clientAny = this.client as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response: any = await withTimeout(
+        clientAny.global?.health?.(),
+        API_TIMEOUTS.health,
+        'Health check'
+      );
+      if (response?.data) {
+        return response.data;
+      }
+      // Fallback if health endpoint doesn't exist
+      return { version: 'unknown', healthy: true };
+    } catch (error) {
+      const classified = classifyError(error);
+      throw new Error(classified.userMessage);
     }
-    // Fallback if health endpoint doesn't exist
-    return { version: 'unknown', healthy: true };
   }
 
   /**
-   * Get all projects from the server
+   * Get all projects from the server with timeout and error handling
    */
   async getProjects(): Promise<
     Array<{
@@ -119,22 +256,32 @@ export class OpencodeApi {
       updatedAt: number;
     }>
   > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const clientAny = this.client as any;
-    const response = await clientAny.project?.list?.();
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clientAny = this.client as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response: any = await withTimeout(
+        clientAny.project?.list?.(),
+        API_TIMEOUTS.projects,
+        'Get projects'
+      );
 
-    if (!response?.data) {
-      return [];
+      if (!response?.data) {
+        return [];
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return response.data.map((project: any) => ({
+        id: project.id || `proj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: project.name || 'Untitled Project',
+        path: project.path,
+        createdAt: project.time?.created || Date.now(),
+        updatedAt: project.time?.updated || project.time?.created || Date.now(),
+      }));
+    } catch (error) {
+      const classified = classifyError(error);
+      throw new Error(classified.userMessage);
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return response.data.map((project: any) => ({
-      id: project.id || `proj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: project.name || 'Untitled Project',
-      path: project.path,
-      createdAt: project.time?.created || Date.now(),
-      updatedAt: project.time?.updated || project.time?.created || Date.now(),
-    }));
   }
 
   /**
@@ -162,7 +309,7 @@ export class OpencodeApi {
   }
 
   /**
-   * Get all sessions for a project
+   * Get all sessions for a project with timeout and error handling
    */
   async getSessions(projectId: string): Promise<
     Array<{
@@ -174,23 +321,33 @@ export class OpencodeApi {
       updatedAt: number;
     }>
   > {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const clientAny = this.client as any;
-    const response = await clientAny.session?.list?.();
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clientAny = this.client as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response: any = await withTimeout(
+        clientAny.session?.list?.(),
+        API_TIMEOUTS.sessions,
+        'Get sessions'
+      );
 
-    if (!response?.data) {
-      return [];
+      if (!response?.data) {
+        return [];
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return response.data.map((session: any) => ({
+        id: session.id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        projectId, // SDK session doesn't have projectId, we associate it
+        title: session.title || 'Untitled Session',
+        workspaceId: session.parentID,
+        createdAt: session.time?.created || Date.now(),
+        updatedAt: session.time?.updated || session.time?.created || Date.now(),
+      }));
+    } catch (error) {
+      const classified = classifyError(error);
+      throw new Error(classified.userMessage);
     }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return response.data.map((session: any) => ({
-      id: session.id || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      projectId, // SDK session doesn't have projectId, we associate it
-      title: session.title || 'Untitled Session',
-      workspaceId: session.parentID,
-      createdAt: session.time?.created || Date.now(),
-      updatedAt: session.time?.updated || session.time?.created || Date.now(),
-    }));
   }
 
   /**
@@ -228,39 +385,49 @@ export class OpencodeApi {
   }
 
   /**
-   * Get all messages for a session
+   * Get all messages for a session with timeout and error handling
    */
   async getMessages(sessionId: string): Promise<MessageWithParts[]> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const clientAny = this.client as any;
-    const response = await clientAny.session?.get?.({
-      path: { id: sessionId },
-    });
-
-    const data = response?.data || response;
-    const messages: MessageWithParts[] = [];
-
-    if (data?.messages && Array.isArray(data.messages)) {
+    try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for (const msg of data.messages) {
-        const parts = this.extractMessageParts(msg, sessionId);
-        messages.push({
-          id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          sessionId,
-          role: (msg.role as 'user' | 'assistant' | 'system') || 'assistant',
-          parts,
-          agent: msg.agent,
-          model: msg.modelID,
-          timestamp: msg.time?.created || Date.now(),
-        });
-      }
-    }
+      const clientAny = this.client as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response: any = await withTimeout(
+        clientAny.session?.get?.({
+          path: { id: sessionId },
+        }),
+        API_TIMEOUTS.messages,
+        'Get messages'
+      );
 
-    return messages;
+      const data = response?.data || response;
+      const messages: MessageWithParts[] = [];
+
+      if (data?.messages && Array.isArray(data.messages)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const msg of data.messages) {
+          const parts = this.extractMessageParts(msg, sessionId);
+          messages.push({
+            id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            sessionId,
+            role: (msg.role as 'user' | 'assistant' | 'system') || 'assistant',
+            parts,
+            agent: msg.agent,
+            model: msg.modelID,
+            timestamp: msg.time?.created || Date.now(),
+          });
+        }
+      }
+
+      return messages;
+    } catch (error) {
+      const classified = classifyError(error);
+      throw new Error(classified.userMessage);
+    }
   }
 
   /**
-   * Send a message to a session
+   * Send a message to a session with timeout and error handling
    */
   async sendMessage(
     sessionId: string,
@@ -279,31 +446,41 @@ export class OpencodeApi {
     model?: string;
     timestamp: number;
   }> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const clientAny = this.client as any;
-    const response = await clientAny.session?.prompt?.({
-      path: { id: sessionId },
-      body: {
-        agent: options?.agent || 'default',
-        model: options?.model,
-        system: options?.system,
-        parts: [{ type: 'text', text: content }],
-      },
-    });
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clientAny = this.client as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response: any = await withTimeout(
+        clientAny.session?.prompt?.({
+          path: { id: sessionId },
+          body: {
+            agent: options?.agent || 'default',
+            model: options?.model,
+            system: options?.system,
+            parts: [{ type: 'text', text: content }],
+          },
+        }),
+        API_TIMEOUTS.messages,
+        'Send message'
+      );
 
-    // Extract the assistant's response content
-    const data = response?.data || response;
-    const responseContent = this.extractResponseContent(data);
+      // Extract the assistant's response content
+      const data = response?.data || response;
+      const responseContent = this.extractResponseContent(data);
 
-    return {
-      id: `msg_${Date.now()}`,
-      sessionId,
-      role: 'assistant',
-      content: responseContent,
-      agent: options?.agent,
-      model: options?.model?.modelID,
-      timestamp: Date.now(),
-    };
+      return {
+        id: `msg_${Date.now()}`,
+        sessionId,
+        role: 'assistant',
+        content: responseContent,
+        agent: options?.agent,
+        model: options?.model?.modelID,
+        timestamp: Date.now(),
+      };
+    } catch (error) {
+      const classified = classifyError(error);
+      throw new Error(classified.userMessage);
+    }
   }
 
   /**

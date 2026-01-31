@@ -8,6 +8,8 @@ import { useEffect } from 'react';
 
 import { AppShell } from '@/components/layout';
 import { ThemeProvider, useTheme } from '@/components/ThemeProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { initializeNetworkMonitoring } from '@/stores';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -42,6 +44,24 @@ function RootLayoutContent() {
   );
 }
 
+function RootLayoutInner() {
+  const { isReady } = useTheme();
+
+  // Initialize network monitoring when theme is ready
+  useEffect(() => {
+    if (isReady) {
+      const cleanup = initializeNetworkMonitoring();
+      return cleanup;
+    }
+  }, [isReady]);
+
+  return (
+    <ErrorBoundary>
+      <RootLayoutContent />
+    </ErrorBoundary>
+  );
+}
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useExpoFonts({
     'GeistMono-Regular': require('../assets/fonts/GeistMono-Regular.ttf'),
@@ -63,7 +83,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <RootLayoutContent />
+          <RootLayoutInner />
         </ThemeProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

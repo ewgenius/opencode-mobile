@@ -9,7 +9,23 @@ import { Button } from '@/components/ui/button';
 import { WorkspaceGroup, Session } from '@/components/project';
 import { useSessions } from '@/hooks/useQueries';
 import { useCreateSession } from '@/hooks/useMutations';
-import { useProjectStore } from '@/stores/projectStore';
+import { useProjectStore, useCacheStore, useIsDeviceOffline } from '@/stores';
+
+// Format relative time (e.g., "5 min ago")
+function formatRelativeTime(timestamp: number | null): string {
+  if (!timestamp) return 'Never';
+
+  const now = Date.now();
+  const diff = now - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+
+  if (seconds < 60) return 'Just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  return 'Long ago';
+}
 
 export default function ProjectDetail() {
   const { id: projectId } = useLocalSearchParams<{ id: string }>();
@@ -32,6 +48,14 @@ export default function ProjectDetail() {
   // Get project name from store
   const project = useProjectStore(state => state.getProjectById(projectId || ''));
   const projectName = project?.name || `Project ${projectId}`;
+
+  // Get last synced time for sessions
+  const isDeviceOffline = useIsDeviceOffline();
+  const getLastSyncAt = useCacheStore(state => state.getLastSyncAt);
+  const sessionsLastSynced = useMemo(() => {
+    if (!projectId) return null;
+    return getLastSyncAt('sessions', projectId);
+  }, [getLastSyncAt, projectId]);
 
   // Group sessions by workspace
   const groupedSessions = useMemo(() => {
@@ -78,39 +102,6 @@ export default function ProjectDetail() {
     console.log('Create new workspace - not yet implemented');
   }, []);
 
-  // Render loading state
-  if (isLoading) {
-    return (
-      <MainContent>
-        <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-          <ActivityIndicator size="large" color={colors.surfaceBrand} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary, fontFamily: uiFont }]}>
-            Loading sessions...
-          </Text>
-        </View>
-      </MainContent>
-    );
-  }
-
-  // Render error state
-  if (isError) {
-    return (
-      <MainContent>
-        <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-          <Text style={[styles.errorTitle, { color: colors.text, fontFamily: uiFont }]}>
-            Failed to load sessions
-          </Text>
-          <Text style={[styles.errorMessage, { color: colors.textSecondary, fontFamily: uiFont }]}>
-            {error?.message || 'An error occurred while fetching sessions'}
-          </Text>
-          <Button onPress={() => refetch()} variant="secondary">
-            Try Again
-          </Button>
-        </View>
-      </MainContent>
-    );
-  }
-
   const workspaceIds = Object.keys(groupedSessions);
   const totalSessions = sessions?.length || 0;
 
@@ -145,14 +136,23 @@ export default function ProjectDetail() {
               <Text style={[styles.projectName, { color: colors.text, fontFamily: uiFont }]}>
                 {projectName}
               </Text>
-              <Text
-                style={[
-                  styles.projectSubtitle,
-                  { color: colors.textSecondary, fontFamily: uiFont },
-                ]}
-              >
-                {totalSessions} session{totalSessions !== 1 ? 's' : ''}
-              </Text>
+              <View style={styles.subtitleRow}>
+                <Text
+                  style={[
+                    styles.projectSubtitle,
+                    { color: colors.textSecondary, fontFamily: uiFont },
+                  ]}
+                >
+                  {totalSessions} session{totalSessions !== 1 ? 's' : ''}
+                </Text>
+                {isDeviceOffline && sessionsLastSynced && (
+                  <Text
+                    style={[styles.syncedText, { color: colors.textTertiary, fontFamily: uiFont }]}
+                  >
+                    Synced {formatRelativeTime(sessionsLastSynced)}
+                  </Text>
+                )}
+              </View>
             </View>
           );
         case 'actions':
@@ -197,9 +197,12 @@ export default function ProjectDetail() {
     [
       colors.text,
       colors.textSecondary,
+      colors.textTertiary,
       uiFont,
       projectName,
       totalSessions,
+      isDeviceOffline,
+      sessionsLastSynced,
       handleNewSession,
       createSession.isPending,
       handleNewWorkspace,
@@ -222,6 +225,39 @@ export default function ProjectDetail() {
     },
     []
   );
+
+  // Render loading state
+  if (isLoading) {
+    return (
+      <MainContent>
+        <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.surfaceBrand} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary, fontFamily: uiFont }]}>
+            Loading sessions...
+          </Text>
+        </View>
+      </MainContent>
+    );
+  }
+
+  // Render error state
+  if (isError) {
+    return (
+      <MainContent>
+        <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+          <Text style={[styles.errorTitle, { color: colors.text, fontFamily: uiFont }]}>
+            Failed to load sessions
+          </Text>
+          <Text style={[styles.errorMessage, { color: colors.textSecondary, fontFamily: uiFont }]}>
+            {error?.message || 'An error occurred while fetching sessions'}
+          </Text>
+          <Button onPress={() => refetch()} variant="secondary">
+            Try Again
+          </Button>
+        </View>
+      </MainContent>
+    );
+  }
 
   return (
     <MainContent>
@@ -275,13 +311,22 @@ const styles = StyleSheet.create({
   projectHeader: {
     marginBottom: 24,
   },
+  subtitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
   projectName: {
     fontSize: 28,
     fontWeight: '700',
   },
   projectSubtitle: {
     fontSize: 16,
-    marginTop: 4,
+  },
+  syncedText: {
+    fontSize: 13,
+    opacity: 0.7,
   },
   actions: {
     flexDirection: 'row',
