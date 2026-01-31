@@ -85,7 +85,7 @@ export function Select({
     backgroundColor: disabled ? colors.inputBackgroundDisabled : colors.inputBackground,
     borderWidth: 1,
     borderColor: error ? colors.borderError : colors.border,
-    borderRadius: 0,
+    borderRadius: 6,
     height: sizeConfig.height,
     paddingHorizontal: sizeConfig.padding,
     opacity: disabled ? 0.6 : 1,
