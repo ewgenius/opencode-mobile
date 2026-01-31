@@ -11,47 +11,96 @@ import type { ThemeMode } from '@/themes/types';
 
 // Lazy initialization of MMKV instance to avoid crash on app launch
 let storageInstance: MMKV | null = null;
+let fallbackStorage: Map<string, string> | null = null;
+let useFallback = false;
 
 function getStorage(): MMKV {
+  if (useFallback && fallbackStorage) {
+    throw new Error('Fallback storage active');
+  }
+
   if (!storageInstance) {
     try {
       storageInstance = new MMKV({
         id: 'preferences-storage',
       });
     } catch (error) {
-      console.error('Failed to initialize MMKV storage:', error);
+      console.error('Failed to initialize MMKV storage, using fallback:', error);
+      useFallback = true;
+      fallbackStorage = new Map();
       throw error;
     }
   }
   return storageInstance;
 }
 
-// Custom storage adapter for Zustand with lazy initialization
+function getFallbackStorage(): Map<string, string> {
+  if (!fallbackStorage) {
+    fallbackStorage = new Map();
+  }
+  return fallbackStorage;
+}
+
+// Custom storage adapter for Zustand with lazy initialization and fallback
 const mmkvStorage = {
   getItem: (name: string): string | null => {
     try {
+      if (useFallback) {
+        const fallback = getFallbackStorage();
+        return fallback.get(name) ?? null;
+      }
       const storage = getStorage();
       const value = storage.getString(name);
       return value ?? null;
     } catch (error) {
       console.error('MMKV getItem error:', error);
-      return null;
+      // Try fallback
+      try {
+        const fallback = getFallbackStorage();
+        return fallback.get(name) ?? null;
+      } catch {
+        return null;
+      }
     }
   },
   setItem: (name: string, value: string): void => {
     try {
+      if (useFallback) {
+        const fallback = getFallbackStorage();
+        fallback.set(name, value);
+        return;
+      }
       const storage = getStorage();
       storage.set(name, value);
     } catch (error) {
       console.error('MMKV setItem error:', error);
+      // Try fallback
+      try {
+        const fallback = getFallbackStorage();
+        fallback.set(name, value);
+      } catch {
+        // Silently fail
+      }
     }
   },
   removeItem: (name: string): void => {
     try {
+      if (useFallback) {
+        const fallback = getFallbackStorage();
+        fallback.delete(name);
+        return;
+      }
       const storage = getStorage();
       storage.delete(name);
     } catch (error) {
       console.error('MMKV removeItem error:', error);
+      // Try fallback
+      try {
+        const fallback = getFallbackStorage();
+        fallback.delete(name);
+      } catch {
+        // Silently fail
+      }
     }
   },
 };
