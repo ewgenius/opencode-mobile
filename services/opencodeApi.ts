@@ -6,7 +6,65 @@
 
 import { createOpencodeClient } from '@opencode-ai/sdk';
 import type { Server } from '@/stores';
-import type { MessageWithParts, Part } from '@/types/messageParts';
+import type { MessageWithParts, Part, TextPart } from '@/types/messageParts';
+
+// Streaming event types
+export type StreamingEvent =
+  | MessageCreatedEvent
+  | PartCreatedEvent
+  | PartUpdatedEvent
+  | MessageCompletedEvent
+  | StreamErrorEvent;
+
+export interface MessageCreatedEvent {
+  type: 'message.created';
+  messageID: string;
+  sessionID: string;
+  role: 'assistant';
+}
+
+export interface PartCreatedEvent {
+  type: 'part.created';
+  partID: string;
+  messageID: string;
+  sessionID: string;
+  partType: string;
+}
+
+export interface PartUpdatedEvent {
+  type: 'part.updated';
+  partID: string;
+  messageID: string;
+  sessionID: string;
+  delta: {
+    text?: string;
+  };
+}
+
+export interface MessageCompletedEvent {
+  type: 'message.completed';
+  messageID: string;
+  sessionID: string;
+}
+
+export interface StreamErrorEvent {
+  type: 'error';
+  error: string;
+  code?: string;
+}
+
+export type StreamEventHandler = (event: StreamingEvent) => void;
+
+export interface StreamMessageOptions {
+  sessionId: string;
+  content: string;
+  agent?: string;
+  model?: { providerID: string; modelID: string };
+  system?: string;
+  onEvent: StreamEventHandler;
+  onError?: (error: Error) => void;
+  onComplete?: () => void;
+}
 
 export interface ApiError extends Error {
   status?: number;
@@ -380,6 +438,117 @@ export class OpencodeApi {
     await clientAny.session?.abort?.({
       path: { id: sessionId },
     });
+  }
+
+  /**
+   * Send a message with streaming response
+   */
+  async sendMessageStream(options: StreamMessageOptions): Promise<() => void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clientAny = this.client as any;
+    const { sessionId, content, agent, model, system, onEvent, onError, onComplete } = options;
+
+    // Subscribe to events first
+    let unsubscribe: (() => void) | null = null;
+
+    try {
+      // Subscribe to server events
+      if (clientAny.event?.subscribe) {
+        unsubscribe = clientAny.event.subscribe((event: unknown) => {
+          const serverEvent = event as Record<string, unknown>;
+          const eventType = serverEvent.type as string;
+
+          switch (eventType) {
+            case 'message.created': {
+              const messageEvent: MessageCreatedEvent = {
+                type: 'message.created',
+                messageID: (serverEvent.messageID as string) || '',
+                sessionID: (serverEvent.sessionID as string) || sessionId,
+                role: 'assistant',
+              };
+              onEvent(messageEvent);
+              break;
+            }
+
+            case 'part.created': {
+              const partEvent: PartCreatedEvent = {
+                type: 'part.created',
+                partID: (serverEvent.partID as string) || '',
+                messageID: (serverEvent.messageID as string) || '',
+                sessionID: (serverEvent.sessionID as string) || sessionId,
+                partType: (serverEvent.partType as string) || 'text',
+              };
+              onEvent(partEvent);
+              break;
+            }
+
+            case 'part.updated': {
+              const updateEvent: PartUpdatedEvent = {
+                type: 'part.updated',
+                partID: (serverEvent.partID as string) || '',
+                messageID: (serverEvent.messageID as string) || '',
+                sessionID: (serverEvent.sessionID as string) || sessionId,
+                delta: (serverEvent.delta as { text?: string }) || { text: '' },
+              };
+              onEvent(updateEvent);
+              break;
+            }
+
+            case 'message.completed': {
+              const completedEvent: MessageCompletedEvent = {
+                type: 'message.completed',
+                messageID: (serverEvent.messageID as string) || '',
+                sessionID: (serverEvent.sessionID as string) || sessionId,
+              };
+              onEvent(completedEvent);
+              onComplete?.();
+              break;
+            }
+
+            case 'error': {
+              const errorEvent: StreamErrorEvent = {
+                type: 'error',
+                error: (serverEvent.error as string) || 'Unknown error',
+                code: serverEvent.code as string | undefined,
+              };
+              onEvent(errorEvent);
+              onError?.(new Error(errorEvent.error));
+              break;
+            }
+
+            default:
+              // Unknown event type, ignore or log
+              break;
+          }
+        });
+      }
+
+      // Send the message with prompt_async option
+      await clientAny.session?.prompt_async?.({
+        path: { id: sessionId },
+        body: {
+          agent: agent || 'default',
+          model,
+          system,
+          parts: [{ type: 'text', text: content }],
+        },
+      });
+    } catch (error) {
+      onError?.(error instanceof Error ? error : new Error(String(error)));
+      // Return cleanup function even on error
+      return () => {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      };
+    }
+
+    // Return cleanup function
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }
 }
 
