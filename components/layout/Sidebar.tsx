@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   Text,
   Pressable,
   Modal,
+  RefreshControl,
 } from 'react-native';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
@@ -20,6 +21,7 @@ import {
   useProjectsForServer,
   useProjectStore,
 } from '@/stores';
+import { useProjects } from '@/hooks/useQueries';
 import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
@@ -36,6 +38,8 @@ export function Sidebar({ onItemPress }: SidebarProps) {
   const setActiveProject = useProjectStore(state => state.setActiveProject);
   const setActiveServer = useServerStore(state => state.setActiveServer);
   const [serverMenuOpen, setServerMenuOpen] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const { refetch } = useProjects();
 
   const handleProjectPress = useCallback(
     (projectId: string) => {
@@ -75,6 +79,12 @@ export function Sidebar({ onItemPress }: SidebarProps) {
     onItemPress?.();
     router.push('/server-settings');
   }, [onItemPress]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -185,7 +195,18 @@ export function Sidebar({ onItemPress }: SidebarProps) {
       </View>
 
       {/* Project List */}
-      <ScrollView style={styles.projectList} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.projectList}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.textSecondary}
+            colors={[colors.surfaceBrand]}
+          />
+        }
+      >
         <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontFamily: uiFont }]}>
           Projects
         </Text>

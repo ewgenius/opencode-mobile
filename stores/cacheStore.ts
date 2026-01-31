@@ -6,7 +6,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { createMMKV, type MMKV } from 'react-native-mmkv';
+import { MMKV } from 'react-native-mmkv';
 
 // Lazy initialization of MMKV instance to avoid crash on app launch
 let storageInstance: MMKV | null = null;
@@ -14,7 +14,7 @@ let storageInstance: MMKV | null = null;
 function getStorage(): MMKV {
   if (!storageInstance) {
     try {
-      storageInstance = createMMKV({
+      storageInstance = new MMKV({
         id: 'cache-storage',
       });
     } catch (error) {
@@ -48,7 +48,7 @@ const mmkvStorage = {
   removeItem: (name: string): void => {
     try {
       const storage = getStorage();
-      storage.remove(name);
+      storage.delete(name);
     } catch (error) {
       console.error('MMKV removeItem error:', error);
     }
@@ -64,12 +64,20 @@ export const CACHE_TTL = {
 
 export const DEFAULT_CACHE_TTL = 60 * 1000; // 1 minute
 
+// Cache size limits
+export const CACHE_LIMITS = {
+  messages: 1000, // Max 1000 messages per session
+} as const;
+
 export type CacheType = keyof typeof CACHE_TTL;
 
 export interface CacheEntry<T> {
   data: T;
   timestamp: number;
   ttl: number;
+  lastSyncAt: number;
+  accessCount: number;
+  lastAccessed: number;
 }
 
 export interface CacheState {
@@ -88,6 +96,16 @@ export interface CacheState {
   clearProjectCache: (projectId: string) => void;
   clearSessionCache: (sessionId: string) => void;
   resetCache: () => void;
+  // Cache size management
+  enforceMessageLimit: (sessionId: string, limit?: number) => void;
+  getCacheStats: () => CacheStats;
+  getLastSyncAt: (type: CacheType, key: string) => number | null;
+}
+
+export interface CacheStats {
+  projects: { count: number; totalSize: number; lastSyncAt: number | null };
+  sessions: { count: number; totalSize: number; lastSyncAt: number | null };
+  messages: { count: number; totalSize: number; lastSyncAt: number | null };
 }
 
 const initialState = {
@@ -102,10 +120,15 @@ export const useCacheStore = create<CacheState>()(
       ...initialState,
 
       setCache: (type, key, data, customTtl) => {
+        const now = Date.now();
+        const existingEntry = get().getCacheEntry<unknown>(type, key);
         const entry: CacheEntry<unknown> = {
           data,
-          timestamp: Date.now(),
+          timestamp: now,
           ttl: customTtl || CACHE_TTL[type] || DEFAULT_CACHE_TTL,
+          lastSyncAt: now,
+          accessCount: existingEntry ? existingEntry.accessCount + 1 : 1,
+          lastAccessed: now,
         };
         set(state => ({
           [type]: {
@@ -119,6 +142,18 @@ export const useCacheStore = create<CacheState>()(
         const entry = get().getCacheEntry<T>(type, key);
         if (!entry) return null;
         if (get().isStale(type, key)) return null;
+        // Update access tracking
+        const now = Date.now();
+        set(state => ({
+          [type]: {
+            ...state[type],
+            [key]: {
+              ...entry,
+              accessCount: entry.accessCount + 1,
+              lastAccessed: now,
+            },
+          },
+        }));
         return entry.data;
       },
 
@@ -174,6 +209,74 @@ export const useCacheStore = create<CacheState>()(
       },
 
       resetCache: () => set(initialState),
+
+      enforceMessageLimit: (sessionId: string, limit?: number) => {
+        const entry = get().messages[sessionId];
+        if (!entry) return;
+
+        const messages = entry.data as Array<unknown>;
+        if (!Array.isArray(messages)) return;
+
+        const maxSize = limit || CACHE_LIMITS.messages;
+        if (messages.length <= maxSize) return;
+
+        // LRU eviction: Sort by last accessed and remove oldest
+        const messagesWithMeta = messages.map((msg, index) => ({
+          msg,
+          index,
+          // Use message timestamp or index as fallback for ordering
+          timestamp:
+            (msg as { createdAt?: number })?.createdAt ||
+            Date.now() - (messages.length - index) * 1000,
+        }));
+
+        // Sort by timestamp ascending (oldest first)
+        messagesWithMeta.sort((a, b) => a.timestamp - b.timestamp);
+
+        // Keep only the most recent maxSize messages
+        const toKeep = messagesWithMeta.slice(-maxSize);
+        const newMessages = toKeep.map(item => item.msg);
+
+        // Update cache with trimmed messages
+        set(state => ({
+          messages: {
+            ...state.messages,
+            [sessionId]: {
+              ...entry,
+              data: newMessages,
+              lastSyncAt: Date.now(),
+            },
+          },
+        }));
+      },
+
+      getCacheStats: () => {
+        const state = get();
+        const now = Date.now();
+
+        const calculateStats = (entries: Record<string, CacheEntry<unknown>>) => {
+          const values = Object.values(entries);
+          const count = values.length;
+          const totalSize = values.reduce((sum, entry) => {
+            const dataSize = JSON.stringify(entry.data).length;
+            return sum + dataSize;
+          }, 0);
+          const lastSyncAt =
+            values.length > 0 ? Math.max(...values.map(e => e.lastSyncAt || 0)) : null;
+          return { count, totalSize, lastSyncAt: lastSyncAt || null };
+        };
+
+        return {
+          projects: calculateStats(state.projects),
+          sessions: calculateStats(state.sessions),
+          messages: calculateStats(state.messages),
+        };
+      },
+
+      getLastSyncAt: (type: CacheType, key: string): number | null => {
+        const entry = get()[type][key];
+        return entry?.lastSyncAt || null;
+      },
     }),
     {
       name: 'cache-storage',

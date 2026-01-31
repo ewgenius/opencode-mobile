@@ -119,6 +119,8 @@ export function useMessages(
       const messages = await client.getMessages(sessionId);
       // Update cache store
       cacheStore.setCache('messages', sessionId, messages);
+      // Enforce message limit with LRU eviction
+      cacheStore.enforceMessageLimit(sessionId);
       return messages;
     },
     enabled: isConnected && !!sessionId,
