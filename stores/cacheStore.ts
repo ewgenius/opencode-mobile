@@ -191,18 +191,20 @@ export const useCacheStore = create<CacheState>()(
         const entry = get().getCacheEntry<T>(type, key);
         if (!entry) return null;
         if (get().isStale(type, key)) return null;
-        // Update access tracking
-        const now = Date.now();
-        set(state => ({
-          [type]: {
-            ...state[type],
-            [key]: {
-              ...entry,
-              accessCount: entry.accessCount + 1,
-              lastAccessed: now,
+        // Defer access tracking update to avoid setState during render warning
+        queueMicrotask(() => {
+          const now = Date.now();
+          set(state => ({
+            [type]: {
+              ...state[type],
+              [key]: {
+                ...entry,
+                accessCount: entry.accessCount + 1,
+                lastAccessed: now,
+              },
             },
-          },
-        }));
+          }));
+        });
         return entry.data;
       },
 
