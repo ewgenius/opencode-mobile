@@ -1,15 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SymbolView } from 'expo-symbols';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
 import { useApi } from '@/hooks/useApi';
 import { useMessages, useSendMessage } from '@/hooks';
-import { MainContent } from '@/components/layout';
+import { MainContent, SessionHeader } from '@/components/layout';
 import { MessageList, InputPane } from '@/components/chat';
 import { SelectOption } from '@/components/ui/select';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 
 // Placeholder agent and model options - these would come from API in production
 const AGENT_OPTIONS: SelectOption[] = [
@@ -30,7 +29,6 @@ export default function SessionChat() {
   const { colors } = useTheme();
   const { uiFont } = useFonts();
   const { isConnected } = useApi();
-  const insets = useSafeAreaInsets();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
@@ -72,39 +70,6 @@ export default function SessionChat() {
     router.back();
   }, []);
 
-  // Header styles
-  const headerStyle = {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    paddingHorizontal: 12,
-    paddingTop: insets.top,
-    height: 56 + insets.top,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  };
-
-  const headerTitleStyle = {
-    fontFamily: uiFont,
-    fontSize: 17,
-    fontWeight: '600' as const,
-    color: colors.text,
-    flex: 1,
-    textAlign: 'center' as const,
-  };
-
-  const backButtonStyle = {
-    padding: 8,
-    width: 44,
-  };
-
-  const moreButtonStyle = {
-    padding: 8,
-    width: 44,
-    alignItems: 'flex-end' as const,
-  };
-
   // Offline banner styles
   const offlineBannerStyle = {
     backgroundColor: colors.surfaceWarning,
@@ -126,27 +91,12 @@ export default function SessionChat() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={headerStyle}>
-        <TouchableOpacity onPress={handleBack} style={backButtonStyle}>
-          <SymbolView name="chevron.left" size={28} tintColor={colors.text} />
-        </TouchableOpacity>
-        <Text style={headerTitleStyle} numberOfLines={1}>
-          Session
-        </Text>
-        <TouchableOpacity style={moreButtonStyle}>
-          <SymbolView name="ellipsis" size={24} tintColor={colors.icon} />
-        </TouchableOpacity>
-      </View>
+      <SessionHeader title="Session" onBackPress={handleBack} />
 
       {/* Offline Banner */}
       {!isConnected && (
         <View style={offlineBannerStyle}>
-          <SymbolView
-            name="wifi.slash"
-            size={16}
-            tintColor={colors.textOnWarning}
-            weight="medium"
-          />
+          <IconSymbol name="wifi.slash" size={16} color={colors.textOnWarning} />
           <Text style={offlineTextStyle}>Offline - Connect to send messages</Text>
         </View>
       )}
