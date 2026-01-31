@@ -1,12 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
+import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
@@ -120,44 +114,64 @@ export default function ProjectDetail() {
   const workspaceIds = Object.keys(groupedSessions);
   const totalSessions = sessions?.length || 0;
 
-  return (
-    <MainContent>
-      <ScrollView
-        style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={onRefresh}
-            tintColor={colors.surfaceBrand}
-          />
-        }
-      >
-        {/* Project Header */}
-        <View style={styles.projectHeader}>
-          <Text style={[styles.projectName, { color: colors.text, fontFamily: uiFont }]}>
-            {projectName}
-          </Text>
-          <Text
-            style={[styles.projectSubtitle, { color: colors.textSecondary, fontFamily: uiFont }]}
-          >
-            {totalSessions} session{totalSessions !== 1 ? 's' : ''}
-          </Text>
-        </View>
+  // Create data array for FlashList with header, actions, and workspace groups
+  const listData = useMemo(() => {
+    if (workspaceIds.length === 0) {
+      return [
+        { type: 'header' as const },
+        { type: 'actions' as const },
+        { type: 'empty' as const },
+      ];
+    }
+    return [
+      { type: 'header' as const },
+      { type: 'actions' as const },
+      ...workspaceIds.map(id => ({ type: 'workspace' as const, workspaceId: id })),
+    ];
+  }, [workspaceIds]);
 
-        {/* Action Buttons */}
-        <View style={styles.actions}>
-          <Button variant="primary" onPress={handleNewSession} disabled={createSession.isPending}>
-            {createSession.isPending ? 'Creating...' : 'New Session'}
-          </Button>
-          <Button variant="secondary" onPress={handleNewWorkspace}>
-            New Workspace
-          </Button>
-        </View>
-
-        {/* Sessions List */}
-        <View style={styles.sessionsSection}>
-          {workspaceIds.length === 0 ? (
+  // Render item function for FlashList
+  const renderItem: ListRenderItem<
+    | { type: 'header' }
+    | { type: 'actions' }
+    | { type: 'empty' }
+    | { type: 'workspace'; workspaceId: string }
+  > = useCallback(
+    ({ item }) => {
+      switch (item.type) {
+        case 'header':
+          return (
+            <View style={styles.projectHeader}>
+              <Text style={[styles.projectName, { color: colors.text, fontFamily: uiFont }]}>
+                {projectName}
+              </Text>
+              <Text
+                style={[
+                  styles.projectSubtitle,
+                  { color: colors.textSecondary, fontFamily: uiFont },
+                ]}
+              >
+                {totalSessions} session{totalSessions !== 1 ? 's' : ''}
+              </Text>
+            </View>
+          );
+        case 'actions':
+          return (
+            <View style={styles.actions}>
+              <Button
+                variant="primary"
+                onPress={handleNewSession}
+                disabled={createSession.isPending}
+              >
+                {createSession.isPending ? 'Creating...' : 'New Session'}
+              </Button>
+              <Button variant="secondary" onPress={handleNewWorkspace}>
+                New Workspace
+              </Button>
+            </View>
+          );
+        case 'empty':
+          return (
             <View style={styles.emptyState}>
               <Text style={[styles.emptyTitle, { color: colors.text, fontFamily: uiFont }]}>
                 No sessions yet
@@ -168,19 +182,64 @@ export default function ProjectDetail() {
                 Create your first session to get started
               </Text>
             </View>
-          ) : (
-            workspaceIds.map(workspaceId => (
-              <WorkspaceGroup
-                key={workspaceId}
-                workspaceId={workspaceId}
-                sessions={groupedSessions[workspaceId]}
-                onSessionPress={handleSessionPress}
-                defaultOpen={true}
-              />
-            ))
-          )}
-        </View>
-      </ScrollView>
+          );
+        case 'workspace':
+          return (
+            <WorkspaceGroup
+              workspaceId={item.workspaceId}
+              sessions={groupedSessions[item.workspaceId]}
+              onSessionPress={handleSessionPress}
+              defaultOpen={true}
+            />
+          );
+      }
+    },
+    [
+      colors.text,
+      colors.textSecondary,
+      uiFont,
+      projectName,
+      totalSessions,
+      handleNewSession,
+      createSession.isPending,
+      handleNewWorkspace,
+      groupedSessions,
+      handleSessionPress,
+    ]
+  );
+
+  const keyExtractor = useCallback(
+    (
+      item:
+        | { type: 'header' }
+        | { type: 'actions' }
+        | { type: 'empty' }
+        | { type: 'workspace'; workspaceId: string },
+      index: number
+    ) => {
+      if (item.type === 'workspace') return item.workspaceId;
+      return `${item.type}-${index}`;
+    },
+    []
+  );
+
+  return (
+    <MainContent>
+      <FlashList
+        data={listData}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={onRefresh}
+            tintColor={colors.surfaceBrand}
+          />
+        }
+        drawDistance={250}
+        style={[styles.container, { backgroundColor: colors.background }]}
+      />
     </MainContent>
   );
 }

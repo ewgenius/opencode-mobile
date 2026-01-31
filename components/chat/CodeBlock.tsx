@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, memo, useMemo } from 'react';
 import { View, Text, TouchableOpacity, type ViewStyle, type TextStyle } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useTheme } from '@/components/ThemeProvider';
@@ -15,6 +15,7 @@ interface Token {
   value: string;
 }
 
+// Language patterns defined outside component to avoid recreation
 const LANGUAGE_PATTERNS: Record<string, Record<string, RegExp>> = {
   javascript: {
     comment: /\/\/.*$|\/\*[\s\S]*?\*\//gm,
@@ -98,27 +99,30 @@ const LANGUAGE_PATTERNS: Record<string, Record<string, RegExp>> = {
   },
 };
 
+const ALIASES: Record<string, string> = {
+  js: 'javascript',
+  ts: 'typescript',
+  tsx: 'typescript',
+  jsx: 'javascript',
+  py: 'python',
+  sh: 'bash',
+  zsh: 'bash',
+  yml: 'yaml',
+  md: 'markdown',
+  css: 'css',
+  scss: 'css',
+  sass: 'css',
+  less: 'css',
+};
+
+// Memoized language normalizer
 function normalizeLanguage(language: string | undefined): string {
   if (!language) return 'generic';
   const lang = language.toLowerCase().trim();
-  const aliases: Record<string, string> = {
-    js: 'javascript',
-    ts: 'typescript',
-    tsx: 'typescript',
-    jsx: 'javascript',
-    py: 'python',
-    sh: 'bash',
-    zsh: 'bash',
-    yml: 'yaml',
-    md: 'markdown',
-    css: 'css',
-    scss: 'css',
-    sass: 'css',
-    less: 'css',
-  };
-  return aliases[lang] || lang;
+  return ALIASES[lang] || lang;
 }
 
+// Tokenizer function - memoized at component level
 function tokenize(code: string, language: string): Token[] {
   const patterns = LANGUAGE_PATTERNS[language] || LANGUAGE_PATTERNS.generic;
   const tokens: Token[] = [];
@@ -158,224 +162,283 @@ function tokenize(code: string, language: string): Token[] {
   return tokens;
 }
 
-export function CodeBlock({ code, language, isUser = false }: CodeBlockProps) {
+function CodeBlockComponent({ code, language, isUser = false }: CodeBlockProps) {
   const { colors } = useTheme();
   const { codeFont } = useFonts();
   const [copied, setCopied] = useState(false);
 
-  const normalizedLang = normalizeLanguage(language);
-  const tokens = tokenize(code, normalizedLang);
+  // Memoize expensive tokenization
+  const normalizedLang = useMemo(() => normalizeLanguage(language), [language]);
+  const tokens = useMemo(() => tokenize(code, normalizedLang), [code, normalizedLang]);
 
+  // Memoize copy handler
   const handleCopy = useCallback(async () => {
     await Clipboard.setStringAsync(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [code]);
 
-  const getTokenColor = (tokenType: string): string => {
-    const colorMap: Record<string, string> = {
-      comment: colors.syntaxComment,
-      string: colors.syntaxString,
-      keyword: colors.syntaxKeyword,
-      number: colors.syntaxConstant,
-      function: colors.syntaxProperty,
-      type: colors.syntaxType,
-      property: colors.syntaxProperty,
-      attribute: colors.syntaxProperty,
-      selector: colors.syntaxType,
-      tag: colors.syntaxKeyword,
-      key: colors.syntaxProperty,
-      heading: colors.syntaxType,
-      bold: colors.syntaxString,
-      italic: colors.syntaxString,
-      link: colors.syntaxInfo,
-      code: colors.syntaxPrimitive,
-      default: isUser ? colors.textOnBrand : colors.text,
-    };
-    return colorMap[tokenType] || colorMap.default;
-  };
+  // Memoize token color lookup
+  const getTokenColor = useCallback(
+    (tokenType: string): string => {
+      const colorMap: Record<string, string> = {
+        comment: colors.syntaxComment,
+        string: colors.syntaxString,
+        keyword: colors.syntaxKeyword,
+        number: colors.syntaxConstant,
+        function: colors.syntaxProperty,
+        type: colors.syntaxType,
+        property: colors.syntaxProperty,
+        attribute: colors.syntaxProperty,
+        selector: colors.syntaxType,
+        tag: colors.syntaxKeyword,
+        key: colors.syntaxProperty,
+        heading: colors.syntaxType,
+        bold: colors.syntaxString,
+        italic: colors.syntaxString,
+        link: colors.syntaxInfo,
+        code: colors.syntaxPrimitive,
+        default: isUser ? colors.textOnBrand : colors.text,
+      };
+      return colorMap[tokenType] || colorMap.default;
+    },
+    [
+      colors.syntaxComment,
+      colors.syntaxString,
+      colors.syntaxKeyword,
+      colors.syntaxConstant,
+      colors.syntaxProperty,
+      colors.syntaxType,
+      colors.syntaxInfo,
+      colors.syntaxPrimitive,
+      colors.textOnBrand,
+      colors.text,
+      isUser,
+    ]
+  );
 
-  const containerStyle: ViewStyle = {
-    backgroundColor: isUser ? 'rgba(0,0,0,0.15)' : colors.backgroundTertiary,
-    borderRadius: 0,
-    marginVertical: 8,
-    overflow: 'hidden',
-  };
+  // Memoize all styles
+  const containerStyle: ViewStyle = useMemo(
+    () => ({
+      backgroundColor: isUser ? 'rgba(0,0,0,0.15)' : colors.backgroundTertiary,
+      borderRadius: 0,
+      marginVertical: 8,
+      overflow: 'hidden',
+    }),
+    [isUser, colors.backgroundTertiary]
+  );
 
-  const headerStyle: ViewStyle = {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: isUser ? 'rgba(0,0,0,0.1)' : colors.backgroundSecondary,
-    borderBottomWidth: 1,
-    borderBottomColor: isUser ? 'rgba(0,0,0,0.05)' : colors.border,
-  };
+  const headerStyle: ViewStyle = useMemo(
+    () => ({
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: isUser ? 'rgba(0,0,0,0.1)' : colors.backgroundSecondary,
+      borderBottomWidth: 1,
+      borderBottomColor: isUser ? 'rgba(0,0,0,0.05)' : colors.border,
+    }),
+    [isUser, colors.backgroundSecondary, colors.border]
+  );
 
-  const languageTextStyle: TextStyle = {
-    fontFamily: codeFont,
-    fontSize: 12,
-    color: isUser ? colors.textOnBrand : colors.textSecondary,
-    textTransform: 'uppercase',
-  };
+  const languageTextStyle: TextStyle = useMemo(
+    () => ({
+      fontFamily: codeFont,
+      fontSize: 12,
+      color: isUser ? colors.textOnBrand : colors.textSecondary,
+      textTransform: 'uppercase',
+    }),
+    [codeFont, isUser, colors.textOnBrand, colors.textSecondary]
+  );
 
-  const copyButtonStyle: ViewStyle = {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 0,
-    backgroundColor: copied
-      ? isUser
-        ? 'rgba(0,0,0,0.2)'
-        : colors.surfaceSuccess
-      : isUser
-        ? 'rgba(0,0,0,0.1)'
-        : colors.surface,
-  };
+  const copyButtonStyle: ViewStyle = useMemo(
+    () => ({
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 0,
+      backgroundColor: copied
+        ? isUser
+          ? 'rgba(0,0,0,0.2)'
+          : colors.surfaceSuccess
+        : isUser
+          ? 'rgba(0,0,0,0.1)'
+          : colors.surface,
+    }),
+    [copied, isUser, colors.surfaceSuccess, colors.surface]
+  );
 
-  const copyTextStyle: TextStyle = {
-    fontFamily: codeFont,
-    fontSize: 12,
-    color: copied
-      ? isUser
-        ? colors.textOnBrand
-        : colors.textOnSuccess
-      : isUser
-        ? colors.textOnBrand
-        : colors.textSecondary,
-    marginLeft: 4,
-  };
+  const copyTextStyle: TextStyle = useMemo(
+    () => ({
+      fontFamily: codeFont,
+      fontSize: 12,
+      color: copied
+        ? isUser
+          ? colors.textOnBrand
+          : colors.textOnSuccess
+        : isUser
+          ? colors.textOnBrand
+          : colors.textSecondary,
+      marginLeft: 4,
+    }),
+    [codeFont, copied, isUser, colors.textOnBrand, colors.textOnSuccess, colors.textSecondary]
+  );
 
-  const codeContainerStyle: ViewStyle = {
-    padding: 12,
-  };
+  const codeContainerStyle: ViewStyle = useMemo(
+    () => ({
+      padding: 12,
+    }),
+    []
+  );
 
-  const lineStyle: ViewStyle = {
-    flexDirection: 'row',
-  };
+  const lineStyle: ViewStyle = useMemo(
+    () => ({
+      flexDirection: 'row',
+    }),
+    []
+  );
 
-  const lineNumberStyle: TextStyle = {
-    fontFamily: codeFont,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.textTertiary,
-    width: 40,
-    textAlign: 'right',
-    paddingRight: 12,
-    userSelect: 'none',
-  };
+  const lineNumberStyle: TextStyle = useMemo(
+    () => ({
+      fontFamily: codeFont,
+      fontSize: 14,
+      lineHeight: 20,
+      color: colors.textTertiary,
+      width: 40,
+      textAlign: 'right',
+      paddingRight: 12,
+      userSelect: 'none',
+    }),
+    [codeFont, colors.textTertiary]
+  );
 
-  const codeTextStyle: TextStyle = {
-    fontFamily: codeFont,
-    fontSize: 14,
-    lineHeight: 20,
-    flex: 1,
-  };
+  const codeTextStyle: TextStyle = useMemo(
+    () => ({
+      fontFamily: codeFont,
+      fontSize: 14,
+      lineHeight: 20,
+      flex: 1,
+    }),
+    [codeFont]
+  );
 
-  const lines = code.split('\n');
-  let tokenIndex = 0;
-  let currentToken = tokens[tokenIndex];
-  let currentTokenPos = 0;
+  // Memoize lines computation
+  const lines = useMemo(() => code.split('\n'), [code]);
 
-  const renderLine = (line: string, lineNum: number) => {
-    const lineTokens: React.ReactElement[] = [];
-    let linePos = 0;
+  // Memoize render line function
+  const renderLine = useCallback(
+    (
+      line: string,
+      lineNum: number,
+      tokenState: { index: number; current: Token | null; pos: number }
+    ) => {
+      const lineTokens: React.ReactElement[] = [];
+      let linePos = 0;
 
-    while (linePos < line.length) {
-      if (!currentToken || tokenIndex >= tokens.length) {
-        lineTokens.push(
-          <Text
-            key={`${lineNum}-${linePos}`}
-            style={[codeTextStyle, { color: getTokenColor('default') }]}
-          >
-            {line.slice(linePos)}
-          </Text>
-        );
-        break;
-      }
-
-      const tokenRemaining = currentToken.value.slice(currentTokenPos);
-      const newlineIndex = tokenRemaining.indexOf('\n');
-
-      if (newlineIndex !== -1) {
-        const beforeNewline = tokenRemaining.slice(0, newlineIndex);
-        if (beforeNewline.length > 0) {
-          if (linePos + beforeNewline.length > line.length) {
-            const partial = beforeNewline.slice(0, line.length - linePos);
-            lineTokens.push(
-              <Text
-                key={`${lineNum}-${linePos}`}
-                style={[codeTextStyle, { color: getTokenColor(currentToken.type) }]}
-              >
-                {partial}
-              </Text>
-            );
-            currentTokenPos += partial.length;
-          } else {
-            lineTokens.push(
-              <Text
-                key={`${lineNum}-${linePos}`}
-                style={[codeTextStyle, { color: getTokenColor(currentToken.type) }]}
-              >
-                {beforeNewline}
-              </Text>
-            );
-            currentTokenPos += beforeNewline.length + 1;
-            linePos += beforeNewline.length;
-          }
-        } else {
-          currentTokenPos++;
+      while (linePos < line.length) {
+        if (!tokenState.current || tokenState.index >= tokens.length) {
+          lineTokens.push(
+            <Text
+              key={`${lineNum}-${linePos}`}
+              style={[codeTextStyle, { color: getTokenColor('default') }]}
+            >
+              {line.slice(linePos)}
+            </Text>
+          );
+          break;
         }
-        tokenIndex++;
-        currentToken = tokens[tokenIndex];
-        currentTokenPos = 0;
-        break;
+
+        const tokenRemaining = tokenState.current.value.slice(tokenState.pos);
+        const newlineIndex = tokenRemaining.indexOf('\n');
+
+        if (newlineIndex !== -1) {
+          const beforeNewline = tokenRemaining.slice(0, newlineIndex);
+          if (beforeNewline.length > 0) {
+            if (linePos + beforeNewline.length > line.length) {
+              const partial = beforeNewline.slice(0, line.length - linePos);
+              lineTokens.push(
+                <Text
+                  key={`${lineNum}-${linePos}`}
+                  style={[codeTextStyle, { color: getTokenColor(tokenState.current.type) }]}
+                >
+                  {partial}
+                </Text>
+              );
+              tokenState.pos += partial.length;
+            } else {
+              lineTokens.push(
+                <Text
+                  key={`${lineNum}-${linePos}`}
+                  style={[codeTextStyle, { color: getTokenColor(tokenState.current.type) }]}
+                >
+                  {beforeNewline}
+                </Text>
+              );
+              tokenState.pos += beforeNewline.length + 1;
+              linePos += beforeNewline.length;
+            }
+          } else {
+            tokenState.pos++;
+          }
+          tokenState.index++;
+          tokenState.current = tokens[tokenState.index] || null;
+          tokenState.pos = 0;
+          break;
+        }
+
+        if (tokenRemaining.length > line.length - linePos) {
+          const partial = tokenRemaining.slice(0, line.length - linePos);
+          lineTokens.push(
+            <Text
+              key={`${lineNum}-${linePos}`}
+              style={[codeTextStyle, { color: getTokenColor(tokenState.current.type) }]}
+            >
+              {partial}
+            </Text>
+          );
+          tokenState.pos += partial.length;
+          linePos += partial.length;
+        } else {
+          lineTokens.push(
+            <Text
+              key={`${lineNum}-${linePos}`}
+              style={[codeTextStyle, { color: getTokenColor(tokenState.current.type) }]}
+            >
+              {tokenRemaining}
+            </Text>
+          );
+          tokenState.pos += tokenRemaining.length;
+          linePos += tokenRemaining.length;
+          tokenState.index++;
+          tokenState.current = tokens[tokenState.index] || null;
+          tokenState.pos = 0;
+        }
       }
 
-      if (tokenRemaining.length > line.length - linePos) {
-        const partial = tokenRemaining.slice(0, line.length - linePos);
-        lineTokens.push(
-          <Text
-            key={`${lineNum}-${linePos}`}
-            style={[codeTextStyle, { color: getTokenColor(currentToken.type) }]}
-          >
-            {partial}
-          </Text>
-        );
-        currentTokenPos += partial.length;
-        linePos += partial.length;
-      } else {
-        lineTokens.push(
-          <Text
-            key={`${lineNum}-${linePos}`}
-            style={[codeTextStyle, { color: getTokenColor(currentToken.type) }]}
-          >
-            {tokenRemaining}
-          </Text>
-        );
-        currentTokenPos += tokenRemaining.length;
-        linePos += tokenRemaining.length;
-        tokenIndex++;
-        currentToken = tokens[tokenIndex];
-        currentTokenPos = 0;
+      if (line.length === 0) {
+        tokenState.index++;
+        tokenState.current = tokens[tokenState.index] || null;
+        tokenState.pos = 0;
       }
-    }
 
-    if (line.length === 0) {
-      tokenIndex++;
-      currentToken = tokens[tokenIndex];
-      currentTokenPos = 0;
-    }
+      return (
+        <View key={lineNum} style={lineStyle}>
+          <Text style={lineNumberStyle}>{lineNum + 1}</Text>
+          <Text style={codeTextStyle}>{lineTokens}</Text>
+        </View>
+      );
+    },
+    [tokens, codeTextStyle, lineStyle, lineNumberStyle, getTokenColor]
+  );
 
-    return (
-      <View key={lineNum} style={lineStyle}>
-        <Text style={lineNumberStyle}>{lineNum + 1}</Text>
-        <Text style={codeTextStyle}>{lineTokens}</Text>
-      </View>
-    );
-  };
+  // Render all lines
+  const tokenState = { index: 0, current: tokens[0] || null, pos: 0 };
+  const renderedLines = useMemo(() => {
+    const state = { index: 0, current: tokens[0] || null, pos: 0 };
+    return lines.map((line, index) => renderLine(line, index, state));
+  }, [lines, tokens, renderLine]);
 
   return (
     <View style={containerStyle}>
@@ -386,7 +449,17 @@ export function CodeBlock({ code, language, isUser = false }: CodeBlockProps) {
           <Text style={copyTextStyle}>{copied ? 'Copied' : 'Copy'}</Text>
         </TouchableOpacity>
       </View>
-      <View style={codeContainerStyle}>{lines.map((line, index) => renderLine(line, index))}</View>
+      <View style={codeContainerStyle}>{renderedLines}</View>
     </View>
   );
 }
+
+// Custom comparison function for React.memo
+function codeBlockAreEqual(prevProps: CodeBlockProps, nextProps: CodeBlockProps): boolean {
+  if (prevProps.code !== nextProps.code) return false;
+  if (prevProps.language !== nextProps.language) return false;
+  if (prevProps.isUser !== nextProps.isUser) return false;
+  return true;
+}
+
+export const CodeBlock = memo(CodeBlockComponent, codeBlockAreEqual);

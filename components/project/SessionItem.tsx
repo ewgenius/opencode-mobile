@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFonts } from '@/hooks/useFonts';
@@ -18,7 +18,8 @@ interface SessionItemProps {
   onPress: (sessionId: string) => void;
 }
 
-function formatTimestamp(timestamp: number): string {
+// Memoized timestamp formatter
+const formatTimestamp = (timestamp: number): string => {
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -41,33 +42,63 @@ function formatTimestamp(timestamp: number): string {
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     });
   }
-}
+};
 
-export function SessionItem({ session, onPress }: SessionItemProps) {
+function SessionItemComponent({ session, onPress }: SessionItemProps) {
   const { colors } = useTheme();
   const { uiFont } = useFonts();
 
+  // Memoize timestamp calculation
+  const formattedTimestamp = useMemo(() => formatTimestamp(session.updatedAt), [session.updatedAt]);
+
+  // Memoize container style
+  const containerStyle = useMemo(
+    () => [styles.container, { backgroundColor: colors.surface }],
+    [colors.surface]
+  );
+
+  // Memoize text styles
+  const titleStyle = useMemo(
+    () => [styles.title, { color: colors.text, fontFamily: uiFont }],
+    [colors.text, uiFont]
+  );
+
+  const timestampStyle = useMemo(
+    () => [styles.timestamp, { color: colors.textTertiary, fontFamily: uiFont }],
+    [colors.textTertiary, uiFont]
+  );
+
+  // Memoize press handler
+  const handlePress = useCallback(() => {
+    onPress(session.id);
+  }, [onPress, session.id]);
+
   return (
-    <TouchableOpacity
-      style={[styles.container, { backgroundColor: colors.surface }]}
-      onPress={() => onPress(session.id)}
-      activeOpacity={0.7}
-    >
+    <TouchableOpacity style={containerStyle} onPress={handlePress} activeOpacity={0.7}>
       <View style={styles.iconContainer}>
         <IconSymbol name="bubble.left" size={20} color={colors.surfaceBrand} />
       </View>
       <View style={styles.content}>
-        <Text style={[styles.title, { color: colors.text, fontFamily: uiFont }]} numberOfLines={1}>
+        <Text style={titleStyle} numberOfLines={1}>
           {session.title}
         </Text>
-        <Text style={[styles.timestamp, { color: colors.textTertiary, fontFamily: uiFont }]}>
-          {formatTimestamp(session.updatedAt)}
-        </Text>
+        <Text style={timestampStyle}>{formattedTimestamp}</Text>
       </View>
       <IconSymbol name="chevron.right" size={16} color={colors.icon} />
     </TouchableOpacity>
   );
 }
+
+// Custom comparison for React.memo - only re-render if session data changes
+function sessionItemAreEqual(prevProps: SessionItemProps, nextProps: SessionItemProps): boolean {
+  if (prevProps.session.id !== nextProps.session.id) return false;
+  if (prevProps.session.title !== nextProps.session.title) return false;
+  if (prevProps.session.updatedAt !== nextProps.session.updatedAt) return false;
+  // onPress is a stable callback from parent
+  return true;
+}
+
+export const SessionItem = memo(SessionItemComponent, sessionItemAreEqual);
 
 const styles = StyleSheet.create({
   container: {
