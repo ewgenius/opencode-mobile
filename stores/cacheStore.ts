@@ -212,7 +212,7 @@ export const useCacheStore = create<CacheState>()(
         const entry = get()[type][key];
         if (!entry) return true;
         const age = Date.now() - entry.timestamp;
-        return age > entry.ttl;
+        return age >= entry.ttl;
       },
 
       getCacheEntry: <T>(type: CacheType, key: string): CacheEntry<T> | null => {
@@ -259,7 +259,13 @@ export const useCacheStore = create<CacheState>()(
         });
       },
 
-      resetCache: () => set(initialState),
+      resetCache: () => {
+        set(initialState);
+        // Also clear fallback storage to ensure test isolation
+        if (fallbackStorage) {
+          fallbackStorage.clear();
+        }
+      },
 
       enforceMessageLimit: (sessionId: string, limit?: number) => {
         const entry = get().messages[sessionId];
