@@ -21,7 +21,7 @@ jest.mock('expo-font', () => ({
 }));
 
 // Mock XMLHttpRequest for SSE client
-global.XMLHttpRequest = jest.fn(() => ({
+const MockXMLHttpRequest = jest.fn(() => ({
   open: jest.fn(),
   send: jest.fn(),
   setRequestHeader: jest.fn(),
@@ -35,7 +35,16 @@ global.XMLHttpRequest = jest.fn(() => ({
   onprogress: null,
   onreadystatechange: null,
   onerror: null,
-})) as unknown as typeof XMLHttpRequest;
+})) as any;
+
+// Define readyState constants on the mock constructor
+(MockXMLHttpRequest as any).UNSENT = 0;
+(MockXMLHttpRequest as any).OPENED = 1;
+(MockXMLHttpRequest as any).HEADERS_RECEIVED = 2;
+(MockXMLHttpRequest as any).LOADING = 3;
+(MockXMLHttpRequest as any).DONE = 4;
+
+global.XMLHttpRequest = MockXMLHttpRequest as typeof XMLHttpRequest;
 
 // Suppress console during tests unless needed
 global.console = {

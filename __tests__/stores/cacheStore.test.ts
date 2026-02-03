@@ -111,23 +111,22 @@ describe('cacheStore', () => {
     it('should return false for fresh cache', () => {
       const store = useCacheStore.getState();
 
-      store.setCache('projects', 'server-1', { name: 'Test' });
+      store.setCache('projects', 'fresh-key', { name: 'Test' });
 
-      const isStale = store.isStale('projects', 'server-1');
+      const isStale = store.isStale('projects', 'fresh-key');
       expect(isStale).toBe(false);
     });
 
     it('should return true for expired cache', async () => {
       const store = useCacheStore.getState();
-      const now = Date.now();
 
-      // Manually create a stale entry by setting timestamp in the past
-      store.setCache('projects', 'server-1', { name: 'Test' }, 1); // 1ms TTL
+      // Use a unique key to avoid interference from other tests' async operations
+      store.setCache('projects', 'expired-key', { name: 'Test' }, 1); // 1ms TTL
 
       // Wait for expiration
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      const isStale = useCacheStore.getState().isStale('projects', 'server-1');
+      const isStale = useCacheStore.getState().isStale('projects', 'expired-key');
       expect(isStale).toBe(true);
     });
   });
