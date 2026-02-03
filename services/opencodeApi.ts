@@ -302,7 +302,7 @@ export class OpencodeApi {
     const data = response?.data || response;
     return {
       id: data?.id || `proj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: data?.name || name,
+      name: name || data?.name || 'New Project',
       createdAt: data?.time?.created || Date.now(),
       updatedAt: data?.time?.updated || data?.time?.created || Date.now(),
     };
